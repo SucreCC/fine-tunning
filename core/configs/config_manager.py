@@ -47,24 +47,28 @@ class ConfigManager:
     def from_yaml(cls, config_path: str) -> "ConfigManager":
         """
         从 YAML 文件加载配置
-
+        
         Args:
             config_path: YAML 配置文件路径
-
+            
         Returns:
             ConfigManager 实例
         """
         # 处理相对路径
         if not os.path.isabs(config_path):
-            # 获取当前文件所在目录（core/config/）
+            # 获取当前文件所在目录（configs/）
             current_dir = Path(__file__).parent.absolute()
-            # 获取 mu_xue 目录
-            mu_xue_dir = current_dir.parent.parent
-            config_path = str(mu_xue_dir / config_path)
-
+            # 如果是相对路径，相对于 configs 目录
+            if not config_path.startswith("configs/"):
+                config_path = str(current_dir / config_path)
+            else:
+                # 如果已经包含 configs/，则相对于项目根目录
+                project_root = current_dir.parent
+                config_path = str(project_root / config_path)
+        
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
-
+        
         return cls.from_dict(config)
 
 
@@ -83,18 +87,24 @@ class ConfigManager:
     def to_yaml(self, output_path: str):
         """
         保存配置到 YAML 文件
-
+        
         Args:
             output_path: 输出文件路径
         """
         config_dict = self.to_dict()
-
+        
         # 处理相对路径
         if not os.path.isabs(output_path):
             current_dir = Path(__file__).parent.absolute()
-            mu_xue_dir = current_dir.parent.parent
-            output_path = str(mu_xue_dir / output_path)
-
+            if not output_path.startswith("configs/"):
+                output_path = str(current_dir / output_path)
+            else:
+                project_root = current_dir.parent
+                output_path = str(project_root / output_path)
+        
+        # 确保输出目录存在
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
         with open(output_path, 'w', encoding='utf-8') as f:
             yaml.dump(config_dict, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 

@@ -1,11 +1,11 @@
 """
 数据集处理模块
-处理 JSONL 格式的对话数据，转换为模型训练所需的格式
+Dataset 和 DataCollator
 """
 import json
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
+from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
 
 
 class ConversationDataset(Dataset):
@@ -59,21 +59,8 @@ class ConversationDataset(Dataset):
         Returns:
             格式化后的对话字符串
         """
-        system = item.get("system", self.system_template)
-        conversations = item.get("conversation", [])
-        
-        # 构建对话文本
-        # 根据模型类型调整格式，这里使用通用格式
-        formatted_text = f"<system>\n{system}\n</system>\n\n"
-        
-        for conv in conversations:
-            human = conv.get("human", "")
-            assistant = conv.get("assistant", "")
-            
-            formatted_text += f"<human>\n{human}\n</human>\n\n"
-            formatted_text += f"<assistant>\n{assistant}\n</assistant>\n\n"
-        
-        return formatted_text.strip()
+        from .preprocess import format_conversation
+        return format_conversation(item, self.system_template)
     
     def _tokenize(self, text: str) -> Dict:
         """
@@ -129,80 +116,18 @@ class ConversationDataset(Dataset):
         }
 
 
-def format_chatglm_conversation(item: Dict, tokenizer: PreTrainedTokenizer) -> str:
+def get_data_collator(tokenizer: PreTrainedTokenizer):
     """
-    格式化 ChatGLM 格式的对话
+    获取数据整理器
     
     Args:
-        item: 包含 system 和 conversation 的字典
         tokenizer: 分词器
         
     Returns:
-        格式化后的对话字符串
+        DataCollatorForLanguageModeling 实例
     """
-    system = item.get("system", "你是一个名为沐雪的可爱AI女孩子")
-    conversations = item.get("conversation", [])
-    
-    # ChatGLM 格式：[Round 1]\n\n问：...\n\n答：...
-    formatted_text = f"[Round 0]\n\n问：系统提示：{system}\n\n答：好的，我明白了。\n\n"
-    
-    round_num = 1
-    for conv in conversations:
-        human = conv.get("human", "")
-        assistant = conv.get("assistant", "")
-        
-        formatted_text += f"[Round {round_num}]\n\n问：{human}\n\n答：{assistant}\n\n"
-        round_num += 1
-    
-    return formatted_text.strip()
-
-
-def format_qwen_conversation(item: Dict, tokenizer: PreTrainedTokenizer) -> str:
-    """
-    格式化 Qwen 格式的对话
-    
-    Args:
-        item: 包含 system 和 conversation 的字典
-        tokenizer: 分词器
-        
-    Returns:
-        格式化后的对话字符串
-    """
-    system = item.get("system", "你是一个名为沐雪的可爱AI女孩子")
-    conversations = item.get("conversation", [])
-    
-    # Qwen 格式使用特殊 token
-    formatted_text = f"<|im_start|>system\n{system}<|im_end|>\n"
-    
-    for conv in conversations:
-        human = conv.get("human", "")
-        assistant = conv.get("assistant", "")
-        
-        formatted_text += f"<|im_start|>user\n{human}<|im_end|>\n"
-        formatted_text += f"<|im_start|>assistant\n{assistant}<|im_end|>\n"
-    
-    return formatted_text
-
-
-def get_dataset_class(model_name: str):
-    """
-    根据模型名称返回对应的数据集格式化函数
-    
-    Args:
-        model_name: 模型名称
-        
-    Returns:
-        格式化函数
-    """
-    model_name_lower = model_name.lower()
-    
-    if "chatglm" in model_name_lower:
-        return format_chatglm_conversation
-    elif "qwen" in model_name_lower:
-        return format_qwen_conversation
-    else:
-        # 默认使用通用格式
-        return lambda item, tokenizer: ConversationDataset._format_conversation(
-            ConversationDataset(None, tokenizer), item
-        )
+    return DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=False  # 因果语言模型，不是掩码语言模型
+    )
 
