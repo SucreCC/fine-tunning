@@ -90,3 +90,18 @@ wandb:
   # wandb 保存目录（可选）
   wandb_dir: null
 
+
+
+  log:
+    service_name: mu_xue
+    log_dir: ./logs
+    log_file: ./logs/mu_xue.log
+    error_file: ./logs/mu_xue.error.log
+    log_level: INFO
+    uvicorn_log_level: INFO
+    uvicorn_access_log_level: WARNING
+    sqlalchemy_log_level: WARNING
+    log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    date_format: "%Y-%m-%d %H:%M:%S"
+
+
