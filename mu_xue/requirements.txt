@@ -1,0 +1,14 @@
+torch>=2.0.0
+transformers>=4.35.0
+peft>=0.6.0
+bitsandbytes>=0.41.0
+accelerate>=0.24.0
+datasets>=2.14.0
+pyyaml>=6.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+
+# 可选依赖
+# wandb>=0.15.0  # 用于实验跟踪（如果启用 use_wandb）
+# deepspeed>=0.10.0  # 用于分布式训练（如果启用 use_deepspeed）
+

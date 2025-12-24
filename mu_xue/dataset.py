@@ -1,0 +1,208 @@
+"""
+数据集处理模块
+处理 JSONL 格式的对话数据，转换为模型训练所需的格式
+"""
+import json
+from typing import List, Dict, Optional
+from torch.utils.data import Dataset
+from transformers import PreTrainedTokenizer
+
+
+class ConversationDataset(Dataset):
+    """对话数据集类"""
+    
+    def __init__(
+        self,
+        data_path: str,
+        tokenizer: PreTrainedTokenizer,
+        max_length: int = 2048,
+        system_template: str = "你是一个名为沐雪的可爱AI女孩子"
+    ):
+        """
+        初始化数据集
+        
+        Args:
+            data_path: JSONL 数据文件路径
+            tokenizer: 分词器
+            max_length: 最大序列长度
+            system_template: 系统提示模板
+        """
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+        self.system_template = system_template
+        
+        # 加载数据
+        self.data = self._load_data(data_path)
+    
+    def _load_data(self, data_path: str) -> List[Dict]:
+        """加载 JSONL 数据"""
+        data = []
+        with open(data_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        item = json.loads(line)
+                        data.append(item)
+                    except json.JSONDecodeError as e:
+                        print(f"解析 JSON 失败: {line[:100]}... 错误: {e}")
+                        continue
+        return data
+    
+    def _format_conversation(self, item: Dict) -> str:
+        """
+        格式化对话为模型输入格式
+        
+        Args:
+            item: 包含 system 和 conversation 的字典
+            
+        Returns:
+            格式化后的对话字符串
+        """
+        system = item.get("system", self.system_template)
+        conversations = item.get("conversation", [])
+        
+        # 构建对话文本
+        # 根据模型类型调整格式，这里使用通用格式
+        formatted_text = f"<system>\n{system}\n</system>\n\n"
+        
+        for conv in conversations:
+            human = conv.get("human", "")
+            assistant = conv.get("assistant", "")
+            
+            formatted_text += f"<human>\n{human}\n</human>\n\n"
+            formatted_text += f"<assistant>\n{assistant}\n</assistant>\n\n"
+        
+        return formatted_text.strip()
+    
+    def _tokenize(self, text: str) -> Dict:
+        """
+        对文本进行分词和编码
+        
+        Args:
+            text: 输入文本
+            
+        Returns:
+            包含 input_ids 和 attention_mask 的字典
+        """
+        # 使用 tokenizer 编码
+        encoded = self.tokenizer(
+            text,
+            truncation=True,
+            max_length=self.max_length,
+            padding="max_length",
+            return_tensors=None
+        )
+        
+        return {
+            "input_ids": encoded["input_ids"],
+            "attention_mask": encoded["attention_mask"]
+        }
+    
+    def __len__(self) -> int:
+        return len(self.data)
+    
+    def __getitem__(self, idx: int) -> Dict:
+        """获取单个数据样本"""
+        item = self.data[idx]
+        
+        # 格式化对话
+        formatted_text = self._format_conversation(item)
+        
+        # 分词编码
+        encoded = self._tokenize(formatted_text)
+        
+        # 创建 labels（对于生成任务，labels 通常等于 input_ids）
+        # 但需要将 padding 部分设为 -100（忽略损失计算）
+        labels = encoded["input_ids"].copy()
+        attention_mask = encoded["attention_mask"]
+        
+        # 将 padding 部分的 labels 设为 -100
+        for i, mask in enumerate(attention_mask):
+            if mask == 0:
+                labels[i] = -100
+        
+        return {
+            "input_ids": encoded["input_ids"],
+            "attention_mask": attention_mask,
+            "labels": labels
+        }
+
+
+def format_chatglm_conversation(item: Dict, tokenizer: PreTrainedTokenizer) -> str:
+    """
+    格式化 ChatGLM 格式的对话
+    
+    Args:
+        item: 包含 system 和 conversation 的字典
+        tokenizer: 分词器
+        
+    Returns:
+        格式化后的对话字符串
+    """
+    system = item.get("system", "你是一个名为沐雪的可爱AI女孩子")
+    conversations = item.get("conversation", [])
+    
+    # ChatGLM 格式：[Round 1]\n\n问：...\n\n答：...
+    formatted_text = f"[Round 0]\n\n问：系统提示：{system}\n\n答：好的，我明白了。\n\n"
+    
+    round_num = 1
+    for conv in conversations:
+        human = conv.get("human", "")
+        assistant = conv.get("assistant", "")
+        
+        formatted_text += f"[Round {round_num}]\n\n问：{human}\n\n答：{assistant}\n\n"
+        round_num += 1
+    
+    return formatted_text.strip()
+
+
+def format_qwen_conversation(item: Dict, tokenizer: PreTrainedTokenizer) -> str:
+    """
+    格式化 Qwen 格式的对话
+    
+    Args:
+        item: 包含 system 和 conversation 的字典
+        tokenizer: 分词器
+        
+    Returns:
+        格式化后的对话字符串
+    """
+    system = item.get("system", "你是一个名为沐雪的可爱AI女孩子")
+    conversations = item.get("conversation", [])
+    
+    # Qwen 格式使用特殊 token
+    formatted_text = f"<|im_start|>system\n{system}<|im_end|>\n"
+    
+    for conv in conversations:
+        human = conv.get("human", "")
+        assistant = conv.get("assistant", "")
+        
+        formatted_text += f"<|im_start|>user\n{human}<|im_end|>\n"
+        formatted_text += f"<|im_start|>assistant\n{assistant}<|im_end|>\n"
+    
+    return formatted_text
+
+
+def get_dataset_class(model_name: str):
+    """
+    根据模型名称返回对应的数据集格式化函数
+    
+    Args:
+        model_name: 模型名称
+        
+    Returns:
+        格式化函数
+    """
+    model_name_lower = model_name.lower()
+    
+    if "chatglm" in model_name_lower:
+        return format_chatglm_conversation
+    elif "qwen" in model_name_lower:
+        return format_qwen_conversation
+    else:
+        # 默认使用通用格式
+        return lambda item, tokenizer: ConversationDataset._format_conversation(
+            ConversationDataset(None, tokenizer), item
+        )
+
