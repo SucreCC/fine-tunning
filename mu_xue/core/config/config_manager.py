@@ -12,6 +12,7 @@ from .dataset_config import DatasetConfig
 from .training_config import TrainingConfig
 from .lora_config import LoRAConfig
 from .other_config import OtherConfig
+from .wandb_config import WandbConfig
 
 
 class ConfigManager:
@@ -24,6 +25,7 @@ class ConfigManager:
         training_config: Optional[TrainingConfig] = None,
         lora_config: Optional[LoRAConfig] = None,
         other_config: Optional[OtherConfig] = None,
+        wandb_config: Optional[WandbConfig] = None,
     ):
         """初始化配置管理器"""
         self.model_config = model_config or ModelConfig()
@@ -31,6 +33,7 @@ class ConfigManager:
         self.training_config = training_config or TrainingConfig()
         self.lora_config = lora_config or LoRAConfig()
         self.other_config = other_config or OtherConfig()
+        self.wandb_config = wandb_config or WandbConfig()
 
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
@@ -41,6 +44,7 @@ class ConfigManager:
             training_config=TrainingConfig.from_dict(config.get("training", {})),
             lora_config=LoRAConfig.from_dict(config.get("lora", {})),
             other_config=OtherConfig.from_dict(config.get("other", {})),
+            wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
         )
 
     @classmethod
@@ -75,6 +79,7 @@ class ConfigManager:
             "training": self.training_config.to_dict(),
             "lora": self.lora_config.to_dict(),
             "other": self.other_config.to_dict(),
+            "wandb": self.wandb_config.to_dict(),
         }
 
     def to_yaml(self, output_path: str):
@@ -103,7 +108,8 @@ class ConfigManager:
             f"  dataset_config={self.dataset_config},\n"
             f"  training_config={self.training_config},\n"
             f"  lora_config={self.lora_config},\n"
-            f"  other_config={self.other_config}\n"
+            f"  other_config={self.other_config},\n"
+            f"  wandb_config={self.wandb_config}\n"
             f")"
         )
 

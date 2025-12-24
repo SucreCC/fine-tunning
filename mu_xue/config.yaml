@@ -70,8 +70,23 @@ other:
   use_deepspeed: false
   # DeepSpeed 配置文件路径
   deepspeed_config: null
+
+# Wandb 配置
+wandb:
   # 是否启用 wandb 日志
   use_wandb: false
+  # wandb API Key（可选）
+  # 注意：建议使用环境变量 WANDB_API_KEY 或运行 `wandb login` 命令
+  # 如果在此处设置，请确保配置文件不会被提交到版本控制系统
+  wandb_api_key: null
   # wandb 项目名称
   wandb_project: "mu_xue_finetuning"
+  # wandb 运行名称（可选，不设置则自动生成）
+  wandb_run_name: null
+  # wandb 实体（组织或个人账户，可选）
+  wandb_entity: null
+  # wandb 标签（可选）
+  wandb_tags: null
+  # wandb 保存目录（可选）
+  wandb_dir: null
 

@@ -12,12 +12,6 @@ class OtherConfig:
     use_deepspeed: bool = False
     # DeepSpeed 配置文件路径
     deepspeed_config: Optional[str] = None
-    # 是否启用 wandb 日志
-    use_wandb: bool = False
-    # wandb 项目名称
-    wandb_project: str = ""
-    # wandb 运行名称
-    wandb_run_name: Optional[str] = None
 
     @classmethod
     def from_dict(cls, config: dict) -> "OtherConfig":
@@ -25,9 +19,6 @@ class OtherConfig:
         return cls(
             use_deepspeed=config.get("use_deepspeed", False),
             deepspeed_config=config.get("deepspeed_config"),
-            use_wandb=config.get("use_wandb", False),
-            wandb_project=config.get("wandb_project", ""),
-            wandb_run_name=config.get("wandb_run_name"),
         )
 
     def to_dict(self) -> dict:
@@ -35,8 +26,5 @@ class OtherConfig:
         return {
             "use_deepspeed": self.use_deepspeed,
             "deepspeed_config": self.deepspeed_config,
-            "use_wandb": self.use_wandb,
-            "wandb_project": self.wandb_project,
-            "wandb_run_name": self.wandb_run_name,
         }
 
