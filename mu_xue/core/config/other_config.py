@@ -15,7 +15,7 @@ class OtherConfig:
     # 是否启用 wandb 日志
     use_wandb: bool = False
     # wandb 项目名称
-    wandb_project: str = "mu_xue_finetuning"
+    wandb_project: str = ""
     # wandb 运行名称
     wandb_run_name: Optional[str] = None
 
@@ -26,7 +26,7 @@ class OtherConfig:
             use_deepspeed=config.get("use_deepspeed", False),
             deepspeed_config=config.get("deepspeed_config"),
             use_wandb=config.get("use_wandb", False),
-            wandb_project=config.get("wandb_project", "mu_xue_finetuning"),
+            wandb_project=config.get("wandb_project", ""),
             wandb_run_name=config.get("wandb_run_name"),
         )
 

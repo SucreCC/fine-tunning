@@ -9,9 +9,9 @@ from typing import Optional
 class ModelConfig:
     """模型配置"""
     # 基础模型路径（可以是 HuggingFace 模型名称或本地路径）
-    base_model_path: str = "THUDM/chatglm3-6b"
+    base_model_path: str = ""
     # 输出模型保存路径
-    output_dir: str = "../model"
+    output_dir: str = ""
     # 是否使用 8bit 量化（节省显存）
     use_8bit: bool = False
     # 是否使用 4bit 量化（更节省显存）
@@ -21,8 +21,8 @@ class ModelConfig:
     def from_dict(cls, config: dict) -> "ModelConfig":
         """从字典创建配置对象"""
         return cls(
-            base_model_path=config.get("base_model_path", "THUDM/chatglm3-6b"),
-            output_dir=config.get("output_dir", "../model"),
+            base_model_path=config.get("base_model_path", ""),
+            output_dir=config.get("output_dir", ""),
             use_8bit=config.get("use_8bit", False),
             use_4bit=config.get("use_4bit", False),
         )
