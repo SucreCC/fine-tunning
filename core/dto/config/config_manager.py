@@ -25,19 +25,10 @@ class ConfigManager:
     training_config: Optional[TrainingConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
     finetune_config: Optional[BaseFinetuningConfig] = None,
-    finetune_enable: bool = True,  # finetune.enable 开关
 
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
         """从字典创建配置管理器"""
-        finetune_dict = config.get("finetune", {})
-        finetune_enable = finetune_dict.get("enable", True)
-        
-        # 如果 finetune.enable 为 False，不创建 finetune_config
-        finetune_config = None
-        if finetune_enable:
-            finetune_config = BaseFinetuningConfig.from_dict(finetune_dict)
-        
         return cls(
             service_config=ServiceConfig.from_dict(config.get("service", {})),
             log_config=LogConfig.from_dict(config.get("log", {})),
@@ -45,8 +36,7 @@ class ConfigManager:
             dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
             training_config=TrainingConfig.from_dict(config.get("training", {})),
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
-            finetune_config=finetune_config,
-            finetune_enable=finetune_enable,
+            finetune_config=BaseFinetuningConfig.from_dict(config.get("finetune", {}))
         )
 
     def to_dict(self) -> dict:
@@ -54,8 +44,7 @@ class ConfigManager:
         finetune_dict = {}
         if self.finetune_config is not None:
             finetune_dict = self.finetune_config.to_dict()
-            finetune_dict["enable"] = self.finetune_enable
-        
+
         return {
             "service": self.service_config.to_dict(),
             "log": self.log_config.to_dict(),
@@ -103,6 +92,5 @@ class ConfigManager:
             f"  training_config={self.training_config},\n"
             f"  wandb_config={self.wandb_config},\n"
             f"  finetune_config={self.finetune_config},\n"
-            f"  finetune_enable={self.finetune_enable}\n"
             f")"
         )

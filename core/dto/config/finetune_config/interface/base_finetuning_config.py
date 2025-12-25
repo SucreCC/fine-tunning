@@ -15,6 +15,7 @@ class BaseFinetuningConfig(ABC):
     """微调配置基类"""
     type: str
     stage: str = "sft"
+    enable: bool = True
 
     @classmethod
     def from_dict(cls, finetune_config: dict) -> "BaseFinetuningConfig":
