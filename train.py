@@ -8,6 +8,7 @@ from core.dto.config.config_manager import ConfigManager
 from core.dto.config.log_config import LogConfig
 from core.dto.config.model_config import ModelConfig
 from core.model.custom_model import CustomModel
+from core.training import CustomTrainer
 from core.utils import logging
 from core.utils.file_utils import find_project_root
 from core.utils.logging import setup_logging
@@ -87,15 +88,15 @@ def main():
 
 
 
-    # # 创建 Trainer
-    # trainer = create_trainer(
-    #     model=model,
-    #     tokenizer=tokenizer,
-    #     train_dataset=train_dataset,
-    #     eval_dataset=val_dataset,
-    #     config=config_manager
-    # )
-    # logger.info("创建 Trainer 成功")
+    # 创建 Trainer
+    trainer = CustomTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        config=config_manager
+    )
+    logger.info("创建 Trainer 成功")
 
     #
     # # 添加回调

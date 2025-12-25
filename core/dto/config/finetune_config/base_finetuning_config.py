@@ -36,6 +36,7 @@ class BaseFinetuningConfig(ABC):
             raise ValueError("finetune 配置中缺少 'type' 字段")
         
         stage = finetune_config.get("stage", "sft")
+        enable = finetune_config.get("enable", True)
         
         # 获取对应的配置类
         config_class = FinetuneStrategyEnum.get_finetune_class_by_type(finetune_type)
@@ -43,10 +44,11 @@ class BaseFinetuningConfig(ABC):
         # 获取该策略的配置字典（例如 finetune_config.get("lora")）
         strategy_config_dict = finetune_config.get(finetune_type, {})
         
-        # 将 type 和 stage 添加到配置字典中，因为子类继承自 BaseFinetuneConfig 需要这些字段
+        # 将 type、stage 和 enable 添加到配置字典中，因为子类继承自 BaseFinetuningConfig 需要这些字段
         strategy_config_dict = strategy_config_dict.copy() if strategy_config_dict else {}
         strategy_config_dict["type"] = finetune_type
         strategy_config_dict["stage"] = stage
+        strategy_config_dict["enable"] = enable
         
         # 创建配置对象
         config_instance = config_class.from_dict(strategy_config_dict)

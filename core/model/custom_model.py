@@ -145,8 +145,12 @@ class CustomModel:
         if self.model is None:
             raise ValueError("模型尚未加载，请先调用 _load_model() 方法")
         
-        if not self.finetune_config.enable:
+        if self.finetune_config is None:
             logger.info("未提供微调配置，使用全量模型训练")
+            return self.model
+        
+        if not self.finetune_config.enable:
+            logger.info("微调已禁用，使用全量模型训练")
             return self.model
         
         # 动态获取微调实现类
