@@ -8,9 +8,7 @@ import random
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
-
 from core.data.interface.base_processor import BaseProcessor
-from core.config.dataset_config import DatasetConfig
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
@@ -31,7 +29,7 @@ class CustomDataset(Dataset):
         初始化数据集
         
         Args:
-            data_path: JSONL 数据文件路径
+            data_path: JSONL 数据文件路径（如果为空字符串，将跳过初始化）
             tokenizer: 分词器
             processor: 数据处理对象，用于格式化对话
             max_length: 最大序列长度
@@ -44,92 +42,20 @@ class CustomDataset(Dataset):
         self.train_ratio = train_ratio
         self.seed = seed
         
+        # 如果路径为空，跳过初始化（用于验证集可选的情况）
+        if not data_path:
+            self.data = []
+            return
+        
         # 检查数据集是否存在
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"数据集不存在: {data_path}")
         
         # 加载数据
         self.data = self._load_data(data_path)
-    
-    @classmethod
-    def from_config(
-        cls,
-        dataset_config: DatasetConfig,
-        tokenizer: PreTrainedTokenizer,
-        processor: BaseProcessor,
-        seed: Optional[int] = None,
-        train_ratio: Optional[float] = None
-    ) -> "CustomDataset":
-        """
-        从配置创建数据集（用于训练集）
         
-        Args:
-            dataset_config: 数据集配置
-            tokenizer: 分词器
-            processor: 数据处理对象
-            seed: 随机种子
-            train_ratio: 训练集使用比例，如果为 None 则使用 dataset_config 中的值
-            
-        Returns:
-            CustomDataset 实例
-        """
-        train_path = dataset_config.train_path
-        train_ratio = train_ratio if train_ratio is not None else dataset_config.train_ratio
-        
-        dataset = cls(
-            data_path=train_path,
-            tokenizer=tokenizer,
-            processor=processor,
-            max_length=dataset_config.max_length,
-            train_ratio=train_ratio,
-            seed=seed
-        )
-        
-        logger.info(f"训练集初始化完毕，训练集大小: {len(dataset)} 条数据")
-        return dataset
-    
-    @classmethod
-    def from_config_val(
-        cls,
-        dataset_config: DatasetConfig,
-        tokenizer: PreTrainedTokenizer,
-        processor: BaseProcessor
-    ) -> Optional["CustomDataset"]:
-        """
-        从配置创建验证数据集
-        
-        Args:
-            dataset_config: 数据集配置
-            tokenizer: 分词器
-            processor: 数据处理对象
-            
-        Returns:
-            CustomDataset 实例，如果验证集路径不存在或为空则返回 None
-        """
-        val_path = dataset_config.val_path
-        
-        # 如果没有配置验证集路径，返回 None
-        if not val_path:
-            logger.info("未配置验证集路径，跳过验证集初始化")
-            return None
-        
-        # 检查验证集是否存在
-        if not os.path.exists(val_path):
-            logger.warning(f"验证集文件不存在: {val_path}，跳过验证集初始化")
-            return None
-
-        # 创建验证数据集（验证集使用全部数据，不应用 train_ratio）
-        val_dataset = cls(
-            data_path=val_path,
-            tokenizer=tokenizer,
-            processor=processor,
-            max_length=dataset_config.max_length,
-            train_ratio=1.0,  # 验证集使用全部数据
-            seed=None  # 验证集不需要随机种子
-        )
-        logger.info(f"验证集初始化完毕，验证集大小: {len(val_dataset)} 条数据")
-
-        return val_dataset
+        # 记录日志
+        logger.info(f"数据集初始化完毕，数据集大小: {len(self.data)} 条数据")
     
     def _load_data(self, data_path: str) -> List[Dict]:
         """
