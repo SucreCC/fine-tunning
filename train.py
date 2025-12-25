@@ -99,11 +99,54 @@ def init_dataset(
         tokenizer=tokenizer,
         max_length=dataset_config.max_length,
         train_ratio=dataset_config.train_ratio,
-        seed=seed
+        seed=seed,
+        system_template=dataset_config.system_prompt
     )
     logger.info(f"训练集初始化完毕，训练集大小: {len(train_dataset)} 条数据")
 
     return train_dataset
+
+
+def init_val_dataset(
+        dataset_config: DatasetConfig,
+        tokenizer: PreTrainedTokenizer,
+        logger: Logger
+) -> ConversationDataset | None:
+    """
+    初始化验证数据集（测试集）
+    
+    Args:
+        dataset_config: 数据集配置
+        tokenizer: 分词器
+        logger: 日志记录器
+        
+    Returns:
+        ConversationDataset 实例，如果验证集路径不存在或为空则返回 None
+    """
+    val_path = dataset_config.val_path
+    
+    # 如果没有配置验证集路径，返回 None
+    if not val_path:
+        logger.info("未配置验证集路径，跳过验证集初始化")
+        return None
+    
+    # 检查验证集是否存在
+    if not os.path.exists(val_path):
+        logger.warning(f"验证集文件不存在: {val_path}，跳过验证集初始化")
+        return None
+
+    # 创建验证数据集（验证集使用全部数据，不应用 train_ratio）
+    val_dataset = ConversationDataset(
+        data_path=val_path,
+        tokenizer=tokenizer,
+        max_length=dataset_config.max_length,
+        train_ratio=1.0,  # 验证集使用全部数据
+        seed=None,  # 验证集不需要随机种子
+        system_template=dataset_config.system_prompt
+    )
+    logger.info(f"验证集初始化完毕，验证集大小: {len(val_dataset)} 条数据")
+
+    return val_dataset
 
 
 def main():
@@ -134,24 +177,13 @@ def main():
         logger=logger
     )
 
-    #
-    # val_dataset = None
-    # if config.dataset_config.val_path:
-    #     val_path = config.dataset_config.val_path
-    #     if not os.path.isabs(val_path):
-    #         val_path = str(script_dir / val_path)
-    #
-    #     if os.path.exists(val_path):
-    #         val_dataset = ConversationDataset(
-    #             data_path=val_path,
-    #             tokenizer=tokenizer,
-    #             max_length=config.dataset_config.max_length
-    #         )
-    #
-    # print(f"训练集大小: {len(train_dataset)}")
-    # if val_dataset:
-    #     print(f"验证集大小: {len(val_dataset)}")
-    #
+    # 初始化验证数据集
+    val_dataset = init_val_dataset(
+        dataset_config=config_manager.dataset_config,
+        tokenizer=tokenizer,
+        logger=logger
+    )
+
     # # 创建 Trainer
     # print("创建 Trainer...")
     # trainer = create_trainer(
