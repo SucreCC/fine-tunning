@@ -10,7 +10,8 @@ from transformers import (
     PreTrainedModel,
     PreTrainedTokenizer,
 )
-from core.config.model_config import ModelConfig
+
+from core.dto.config.model_config import ModelConfig
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
