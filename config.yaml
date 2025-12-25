@@ -1,3 +1,9 @@
+# 服务配置
+service:
+  service_name: mu_xue
+  description: mu_xue
+  version: 1.0.0
+
 # 模型配置
 model:
   # 基础模型路径（可以是 HuggingFace 模型名称或本地路径）
@@ -63,13 +69,6 @@ lora:
   target_modules: ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"]
   # LoRA dropout
   lora_dropout: 0.1
-
-# 其他配置
-other:
-  # 是否使用 DeepSpeed（需要安装 deepspeed）
-  use_deepspeed: false
-  # DeepSpeed 配置文件路径
-  deepspeed_config: null
 
 # Wandb 配置
 wandb:
