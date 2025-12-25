@@ -6,7 +6,9 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
 import yaml
+
 from .dataset_config import DatasetConfig
 from .log_config import LogConfig
 from .lora_config import LoRAConfig
@@ -27,6 +29,37 @@ class ConfigManager:
     lora_config: Optional[LoRAConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
 
+    @staticmethod
+    def find_project_root(config_file_name: str = "config.yaml") -> Path:
+        """
+        查找项目根路径（config.yaml 所在的文件夹）
+
+        从当前工作目录一级一级往上找，直到找到指定的配置文件
+
+        Args:
+            config_file_name: 配置文件名，默认为 "config.yaml"
+
+        Returns:
+            项目根目录的绝对路径
+
+        Raises:
+            FileNotFoundError: 如果找不到配置文件
+        """
+        # 从当前工作目录开始向上查找
+        current_path = Path(os.getcwd()).absolute()
+
+        # 向上查找，直到找到包含配置文件的目录
+        while current_path != current_path.parent:
+            config_file = current_path / config_file_name
+            if config_file.exists():
+                return current_path
+            current_path = current_path.parent
+
+        # 如果找不到，抛出异常
+        raise FileNotFoundError(
+            f"找不到配置文件 '{config_file_name}'。请确保在项目根目录或其子目录中运行。"
+        )
+
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
         """从字典创建配置管理器"""
@@ -40,34 +73,6 @@ class ConfigManager:
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
         )
 
-    @classmethod
-    def from_yaml(cls, config_path: str) -> "ConfigManager":
-        """
-        从 YAML 文件加载配置
-        
-        Args:
-            config_path: YAML 配置文件路径
-            
-        Returns:
-            ConfigManager 实例
-        """
-        # 处理相对路径
-        if not os.path.isabs(config_path):
-            # 获取当前文件所在目录（configs/）
-            current_dir = Path(__file__).parent.absolute()
-            # 如果是相对路径，相对于 configs 目录
-            if not config_path.startswith("configs/"):
-                config_path = str(current_dir / config_path)
-            else:
-                # 如果已经包含 configs/，则相对于项目根目录
-                project_root = current_dir.parent
-                config_path = str(project_root / config_path)
-
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
-
-        return cls.from_dict(config)
-
     def to_dict(self) -> dict:
         """转换为字典"""
         return {
@@ -80,29 +85,31 @@ class ConfigManager:
             "wandb": self.wandb_config.to_dict(),
         }
 
-    def to_yaml(self, output_path: str):
+    @classmethod
+    def from_yaml(cls, config_file_name: str = "config.yaml") -> "ConfigManager":
         """
-        保存配置到 YAML 文件
+        从 YAML 文件加载配置
+        
+        调用 find_project_root 找到项目根目录，然后拼接配置文件的绝对路径并读取
         
         Args:
-            output_path: 输出文件路径
+            config_file_name: 配置文件名，默认为 "config.yaml"
+            
+        Returns:
+            ConfigManager 实例
         """
-        config_dict = self.to_dict()
-
-        # 处理相对路径
-        if not os.path.isabs(output_path):
-            current_dir = Path(__file__).parent.absolute()
-            if not output_path.startswith("configs/"):
-                output_path = str(current_dir / output_path)
-            else:
-                project_root = current_dir.parent
-                output_path = str(project_root / output_path)
-
-        # 确保输出目录存在
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        with open(output_path, 'w', encoding='utf-8') as f:
-            yaml.dump(config_dict, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        # 调用 find_project_root 找到项目根目录
+        project_root = cls.find_project_root(config_file_name)
+        
+        # 拼接配置文件的绝对路径
+        config_path = str(project_root / config_file_name)
+        
+        # 读取 yaml 文件
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        # 返回 ConfigManager 实例
+        return cls.from_dict(config)
 
     def __repr__(self) -> str:
         """返回配置的字符串表示"""
