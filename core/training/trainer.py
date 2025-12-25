@@ -3,8 +3,7 @@ Trainer 封装模块
 """
 from transformers import Trainer, TrainingArguments
 from typing import Optional
-
-from core.utils.config import ConfigManager
+from core.config.config_manager import ConfigManager
 from core.data.dataset import get_data_collator
 
 

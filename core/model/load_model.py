@@ -4,13 +4,23 @@
 """
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from bitsandbytes import BitsAndBytesConfig
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any
+from transformers.models.auto.modeling_auto import _BaseModelWithGenerate
+from core.config.model_config import ModelConfig
+from core.utils import logging
 
-from core.utils.config import ConfigManager
+# 可选导入 bitsandbytes（用于量化）
+try:
+    from bitsandbytes import BitsAndBytesConfig
+    BITSANDBYTES_AVAILABLE = True
+except ImportError:
+    BITSANDBYTES_AVAILABLE = False
+    BitsAndBytesConfig = None
+
+logger = logging.get_logger(__name__)
 
 
-def load_model_and_tokenizer(config: ConfigManager) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
+def load_model_and_tokenizer(model_config: ModelConfig) -> tuple[_BaseModelWithGenerate, Any]:
     """
     加载模型和分词器
     
@@ -20,11 +30,10 @@ def load_model_and_tokenizer(config: ConfigManager) -> Tuple[AutoModelForCausalL
     Returns:
         (model, tokenizer) 元组
     """
-    model_config = config.model_config
     base_model_path = model_config.base_model_path
     
     # 加载分词器
-    print(f"加载分词器: {base_model_path}")
+    logger.info(f"加载分词器: {base_model_path}")
     tokenizer = AutoTokenizer.from_pretrained(
         base_model_path,
         trust_remote_code=True
@@ -38,6 +47,11 @@ def load_model_and_tokenizer(config: ConfigManager) -> Tuple[AutoModelForCausalL
     # 配置量化
     quantization_config = None
     if model_config.use_4bit:
+        if not BITSANDBYTES_AVAILABLE:
+            raise ImportError(
+                "bitsandbytes 未安装，无法使用 4bit 量化。"
+                "请运行: pip install bitsandbytes"
+            )
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -45,12 +59,17 @@ def load_model_and_tokenizer(config: ConfigManager) -> Tuple[AutoModelForCausalL
             bnb_4bit_use_double_quant=True
         )
     elif model_config.use_8bit:
+        if not BITSANDBYTES_AVAILABLE:
+            raise ImportError(
+                "bitsandbytes 未安装，无法使用 8bit 量化。"
+                "请运行: pip install bitsandbytes"
+            )
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True
         )
     
     # 加载模型
-    print(f"加载模型: {base_model_path}")
+    logger.info(f"加载模型: {base_model_path}")
     model = AutoModelForCausalLM.from_pretrained(
         base_model_path,
         trust_remote_code=True,
