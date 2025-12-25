@@ -7,19 +7,21 @@ import random
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
+
+from core.data.interface.base_process import BaseProcess
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
 
-class ConversationDataset(Dataset):
+class CustomerDataset(Dataset):
     """对话数据集类"""
     
     def __init__(
         self,
         data_path: str,
         tokenizer: PreTrainedTokenizer,
+        process: BaseProcess,
         max_length: int = 2048,
-        system_template: str = "",
         train_ratio: float = 1.0,
         seed: Optional[int] = None
     ):
@@ -29,14 +31,14 @@ class ConversationDataset(Dataset):
         Args:
             data_path: JSONL 数据文件路径
             tokenizer: 分词器
+            process: 数据处理对象，用于格式化对话
             max_length: 最大序列长度
-            system_template: 系统提示模板
             train_ratio: 训练集使用比例（0.0-1.0，1.0 表示使用全部数据）
             seed: 随机种子，用于数据子集选择的可重复性
         """
         self.tokenizer = tokenizer
         self.max_length = max_length
-        self.system_template = system_template
+        self.process = process
         self.train_ratio = train_ratio
         self.seed = seed
         
@@ -97,8 +99,7 @@ class ConversationDataset(Dataset):
         Returns:
             格式化后的对话字符串
         """
-        from .preprocess import format_conversation
-        return format_conversation(item, self.system_template)
+        return self.process.process(item)
     
     def _tokenize(self, text: str) -> Dict:
         """

@@ -11,7 +11,7 @@ from core.config.customer_lora_config import CustomerLoRAConfig
 from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
-from core.data import ConversationDataset
+from core.data import CustomerDataset, DefaultProcess
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
 from core.utils import logging
@@ -76,7 +76,7 @@ def init_dataset(
         tokenizer: PreTrainedTokenizer,
         seed: int,
         logger: Logger
-) -> ConversationDataset:
+) -> CustomerDataset:
     """
     初始化训练数据集
     
@@ -87,21 +87,24 @@ def init_dataset(
         logger: 日志记录器
         
     Returns:
-        ConversationDataset 实例
+        CustomerDataset 实例
     """
     train_path = dataset_config.train_path
     # 检查数据集是否存在
     if not os.path.exists(train_path):
         raise FileNotFoundError(f"数据集不存在: {train_path}")
 
+    # 创建数据处理对象
+    process = DefaultProcess(system_template=dataset_config.system_prompt)
+
     # 创建训练数据集（内部会根据 train_ratio 选择子集）
-    train_dataset = ConversationDataset(
+    train_dataset = CustomerDataset(
         data_path=train_path,
         tokenizer=tokenizer,
+        process=process,
         max_length=dataset_config.max_length,
         train_ratio=dataset_config.train_ratio,
-        seed=seed,
-        system_template=dataset_config.system_prompt
+        seed=seed
     )
     logger.info(f"训练集初始化完毕，训练集大小: {len(train_dataset)} 条数据")
 
@@ -112,7 +115,7 @@ def init_val_dataset(
         dataset_config: DatasetConfig,
         tokenizer: PreTrainedTokenizer,
         logger: Logger
-) -> ConversationDataset | None:
+) -> CustomerDataset | None:
     """
     初始化验证数据集（测试集）
     
@@ -122,7 +125,7 @@ def init_val_dataset(
         logger: 日志记录器
         
     Returns:
-        ConversationDataset 实例，如果验证集路径不存在或为空则返回 None
+        CustomerDataset 实例，如果验证集路径不存在或为空则返回 None
     """
     val_path = dataset_config.val_path
     
@@ -136,14 +139,17 @@ def init_val_dataset(
         logger.warning(f"验证集文件不存在: {val_path}，跳过验证集初始化")
         return None
 
+    # 创建数据处理对象
+    process = DefaultProcess(system_template=dataset_config.system_prompt)
+
     # 创建验证数据集（验证集使用全部数据，不应用 train_ratio）
-    val_dataset = ConversationDataset(
+    val_dataset = CustomerDataset(
         data_path=val_path,
         tokenizer=tokenizer,
+        process=process,
         max_length=dataset_config.max_length,
         train_ratio=1.0,  # 验证集使用全部数据
-        seed=None,  # 验证集不需要随机种子
-        system_template=dataset_config.system_prompt
+        seed=None  # 验证集不需要随机种子
     )
     logger.info(f"验证集初始化完毕，验证集大小: {len(val_dataset)} 条数据")
 
