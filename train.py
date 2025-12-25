@@ -106,8 +106,8 @@ def main():
 
     # 保存最终模型
     logger.info("保存模型...")
-    model.save_pretrained(str(output_dir / "lora_model"))
-    tokenizer.save_pretrained(str(output_dir / "lora_model"))
+    model.save_pretrained(str(output_dir))
+    tokenizer.save_pretrained(str(output_dir))
 
     logger.info("训练完成！")
 
