@@ -4,16 +4,17 @@
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
-from core.dto.enums import FinetuneStrategyEnum
+if TYPE_CHECKING:
+    from core.dto.enums.finetune_config_enum import FinetuneStrategyEnum
 
 
 @dataclass
 class BaseFinetuneConfig(ABC):
     """微调配置基类"""
-    type: FinetuneStrategyEnum
-    stage: str = FinetuneStrategyEnum
+    type: "FinetuneStrategyEnum"
+    stage: str = "sft"
     
     @classmethod
     @abstractmethod

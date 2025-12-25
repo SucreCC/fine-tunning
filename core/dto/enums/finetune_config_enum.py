@@ -38,12 +38,27 @@ class FinetuneStrategyEnum(Enum):
     def get_config_class_by_type(
         cls,
         finetune_type: str,
-    ) -> Optional[Type[BaseFinetuneConfig]]:
+    ) -> str:
+        """
+        根据 finetune_type 获取对应的模块路径
+        
+        Args:
+            finetune_type: 微调类型名称（如 "lora", "p_tuning"）
+            
+        Returns:
+            模块路径，格式：core.dto.config.finetune_config.interface.iml.{module_name}
+            
+        Raises:
+            ValueError: 如果类型不存在
+        """
         finetune_type = finetune_type.lower()
 
         for item in cls:
             if item.strategy_name == finetune_type:
-                return item.config_class
+                # 根据 strategy_name 生成模块名（添加 _config 后缀）
+                module_name = f"{item.strategy_name}_config"
+                # 返回完整的模块路径
+                return f"core.dto.config.finetune_config.interface.iml.{module_name}"
 
         raise ValueError(
             f"Unknown finetune strategy: {finetune_type}. "
