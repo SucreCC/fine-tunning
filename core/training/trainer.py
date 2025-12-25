@@ -4,7 +4,7 @@ Trainer 封装模块
 from transformers import Trainer, TrainingArguments
 from typing import Optional
 from core.config.config_manager import ConfigManager
-from core.data.customer_dataset import get_data_collator
+from core.data.custom_dataset import get_data_collator
 
 
 def create_trainer(

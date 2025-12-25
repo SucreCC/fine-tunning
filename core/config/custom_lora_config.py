@@ -6,7 +6,7 @@ from typing import List, Optional, Literal, cast
 
 
 @dataclass
-class CustomerLoRAConfig:
+class CustomLoRAConfig:
     """LoRA 配置"""
     # 是否使用 LoRA
     use_lora: bool = True
@@ -32,7 +32,7 @@ class CustomerLoRAConfig:
             ]
 
     @classmethod
-    def from_dict(cls, config: dict) -> "CustomerLoRAConfig":
+    def from_dict(cls, config: dict) -> "CustomLoRAConfig":
         target_modules = config.get(
             "target_modules",
             ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"],

@@ -8,13 +8,13 @@ from peft import (
     TaskType, PeftModel, PeftMixedModel
 )
 from transformers import PreTrainedModel
-from core.config.customer_lora_config import CustomerLoRAConfig
+from core.config.custom_lora_config import CustomLoRAConfig
 from core.config.model_config import ModelConfig
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
 
-def setup_lora(model: PreTrainedModel, lora_config: CustomerLoRAConfig, model_config: ModelConfig) -> PreTrainedModel | PeftModel | PeftMixedModel:
+def setup_lora(model: PreTrainedModel, lora_config: CustomLoRAConfig, model_config: ModelConfig) -> PreTrainedModel | PeftModel | PeftMixedModel:
     """
     设置 LoRA
     

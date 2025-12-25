@@ -7,11 +7,11 @@ from logging import Logger
 from transformers import PreTrainedTokenizer
 
 from core.config.config_manager import ConfigManager
-from core.config.customer_lora_config import CustomerLoRAConfig
+from core.config.custom_lora_config import CustomLoRAConfig
 from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
-from core.data import CustomerDataset, DefaultProcess
+from core.data import CustomDataset, DefaultProcess
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
 from core.utils import logging
@@ -43,7 +43,7 @@ def init_output_dir(model_config: ModelConfig):
 
 def init_model(
     model_config: ModelConfig,
-    lora_config: CustomerLoRAConfig,
+    lora_config: CustomLoRAConfig,
     logger: Logger
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     """
@@ -76,7 +76,7 @@ def init_dataset(
         tokenizer: PreTrainedTokenizer,
         seed: int,
         logger: Logger
-) -> CustomerDataset:
+) -> CustomDataset:
     """
     初始化训练数据集
     
@@ -87,7 +87,7 @@ def init_dataset(
         logger: 日志记录器
         
     Returns:
-        CustomerDataset 实例
+        CustomDataset 实例
     """
     train_path = dataset_config.train_path
     # 检查数据集是否存在
@@ -98,7 +98,7 @@ def init_dataset(
     process = DefaultProcess(system_template=dataset_config.system_prompt)
 
     # 创建训练数据集（内部会根据 train_ratio 选择子集）
-    train_dataset = CustomerDataset(
+    train_dataset = CustomDataset(
         data_path=train_path,
         tokenizer=tokenizer,
         process=process,
@@ -115,7 +115,7 @@ def init_val_dataset(
         dataset_config: DatasetConfig,
         tokenizer: PreTrainedTokenizer,
         logger: Logger
-) -> CustomerDataset | None:
+) -> CustomDataset | None:
     """
     初始化验证数据集（测试集）
     
@@ -125,7 +125,7 @@ def init_val_dataset(
         logger: 日志记录器
         
     Returns:
-        CustomerDataset 实例，如果验证集路径不存在或为空则返回 None
+        CustomDataset 实例，如果验证集路径不存在或为空则返回 None
     """
     val_path = dataset_config.val_path
     
@@ -143,7 +143,7 @@ def init_val_dataset(
     process = DefaultProcess(system_template=dataset_config.system_prompt)
 
     # 创建验证数据集（验证集使用全部数据，不应用 train_ratio）
-    val_dataset = CustomerDataset(
+    val_dataset = CustomDataset(
         data_path=val_path,
         tokenizer=tokenizer,
         process=process,

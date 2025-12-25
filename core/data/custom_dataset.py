@@ -13,7 +13,7 @@ from core.utils import logging
 
 logger = logging.get_logger(__name__)
 
-class CustomerDataset(Dataset):
+class CustomDataset(Dataset):
     """对话数据集类"""
     
     def __init__(
