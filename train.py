@@ -30,7 +30,9 @@ def init_log(log_config: LogConfig):
 
 
 def init_output_dir(model_config: ModelConfig):
-    output_dir = PROJECT_ROOT / model_config.output_dir
+    """初始化输出目录"""
+    output_dir_path = model_config.get_output_dir()
+    output_dir = PROJECT_ROOT / output_dir_path
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
 
@@ -103,17 +105,11 @@ def main():
     trainer.train()
 
     # 保存最终模型
-    print("保存模型...")
-    if config.lora_config.use_lora:
-        # LoRA 模型保存
-        model.save_pretrained(str(output_dir / "lora_model"))
-        tokenizer.save_pretrained(str(output_dir / "lora_model"))
-    else:
-        # 全量模型保存
-        trainer.save_model(str(output_dir / "final_model"))
-        tokenizer.save_pretrained(str(output_dir / "final_model"))
+    logger.info("保存模型...")
+    model.save_pretrained(str(output_dir / "lora_model"))
+    tokenizer.save_pretrained(str(output_dir / "lora_model"))
 
-    print("训练完成！")
+    logger.info("训练完成！")
 
 
 if __name__ == "__main__":

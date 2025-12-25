@@ -29,14 +29,27 @@ class ConfigManager:
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
         """从字典创建配置管理器"""
+        # 创建各个配置对象
+        service_config = ServiceConfig.from_dict(config.get("service", {}))
+        log_config = LogConfig.from_dict(config.get("log", {}))
+        model_config = ModelConfig.from_dict(config.get("model", {}))
+        dataset_config = DatasetConfig.from_dict(config.get("dataset", {}))
+        training_config = TrainingConfig.from_dict(config.get("training", {}))
+        wandb_config = WandbConfig.from_dict(config.get("wandb", {}))
+        finetune_config = BaseFinetuningConfig.from_dict(config.get("finetune", {}))
+        
+        # 如果 model.run_name 未设置，则自动使用 wandb.wandb_run_name
+        if model_config.run_name is None and wandb_config.wandb_run_name is not None:
+            model_config.run_name = wandb_config.wandb_run_name
+        
         return cls(
-            service_config=ServiceConfig.from_dict(config.get("service", {})),
-            log_config=LogConfig.from_dict(config.get("log", {})),
-            model_config=ModelConfig.from_dict(config.get("model", {})),
-            dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
-            training_config=TrainingConfig.from_dict(config.get("training", {})),
-            wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
-            finetune_config=BaseFinetuningConfig.from_dict(config.get("finetune", {}))
+            service_config=service_config,
+            log_config=log_config,
+            model_config=model_config,
+            dataset_config=dataset_config,
+            training_config=training_config,
+            wandb_config=wandb_config,
+            finetune_config=finetune_config
         )
 
     def to_dict(self) -> dict:

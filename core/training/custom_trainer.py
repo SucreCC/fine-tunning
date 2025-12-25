@@ -201,7 +201,7 @@ class CustomTrainer(Trainer):
         
         # 构建 TrainingArguments 参数字典
         training_args_dict = {
-            "output_dir": model_config.output_dir,
+            "output_dir": model_config.get_output_dir(),
             "num_train_epochs": training_config.num_epochs,
             "per_device_train_batch_size": training_config.per_device_train_batch_size,
             "gradient_accumulation_steps": training_config.gradient_accumulation_steps,

@@ -19,11 +19,29 @@ log:
   date_format: "%Y-%m-%d %H:%M:%S"
 
 # ========================
+# WandB 配置
+# ========================
+wandb:
+  use_wandb: true
+  wandb_api_key: "f49fecc68453c53efcf05f3eef1ed2baddb92036"
+  wandb_project: "mu_xue_finetuning"
+  wandb_run_name: "Qwen2.5-7B-Instruct"
+  wandb_entity: null
+  wandb_tags: null
+  wandb_dir: null
+
+# ========================
 # 模型配置
 # ========================
 model:
   base_model_path: "./model/Qwen2.5-7B-Instruct"
-  output_dir: "./outputs/checkpoints/Qwen2.5-7B-Instruct"
+  # 检查点基础目录（所有检查点的根目录）
+  checkpoint_dir: "./outputs/checkpoints"
+  # 运行名称/实验名称（会在 checkpoint_dir 下创建以此命名的子目录）
+  # 如果不设置，则自动从 wandb.wandb_run_name 获取
+  # run_name: 自动从 wandb.wandb_run_name 获取，无需手动设置
+  # output_dir: 已废弃，使用 checkpoint_dir + run_name 代替
+  # 如果设置了 checkpoint_dir 和 run_name，output_dir 会被忽略
 
   # 量化配置（为 QLoRA / LoRA 预留）
   quantization:
@@ -144,14 +162,3 @@ training:
     fsdp_config: null
 
 
-# ========================
-# WandB 配置
-# ========================
-wandb:
-  use_wandb: true
-  wandb_api_key: "f49fecc68453c53efcf05f3eef1ed2baddb92036"
-  wandb_project: "mu_xue_finetuning"
-  wandb_run_name: null
-  wandb_entity: null
-  wandb_tags: null
-  wandb_dir: null
