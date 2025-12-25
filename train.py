@@ -1,10 +1,12 @@
 """
 训练入口脚本
 """
+import os
 
 from core.config.config_manager import ConfigManager
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
+from core.data import ConversationDataset
 from core.model import load_model_and_tokenizer, setup_lora
 from core.utils import logging
 from core.utils.file_utils import find_project_root
@@ -52,22 +54,20 @@ def main():
     model = setup_lora(model, config_manager.customer_lora_config, config_manager.model_config)
     logger.info("设置 LoRA 成功")
 
+    train_path = config_manager.dataset_config.train_path
+    # 检查数据集是否存在
+    if not os.path.exists(train_path):
+        raise FileNotFoundError(f"数据集不存在: {train_path}")
 
 
-    #
-    # # 创建数据集
-    # print("创建数据集...")
-    # # 处理路径
-    # script_dir = Path(__file__).parent.parent
-    # train_path = config.dataset_config.train_path
-    # if not os.path.isabs(train_path):
-    #     train_path = str(script_dir / train_path)
-    #
-    # train_dataset = ConversationDataset(
-    #     data_path=train_path,
-    #     tokenizer=tokenizer,
-    #     max_length=config.dataset_config.max_length
-    # )
+
+    train_dataset = ConversationDataset(
+        data_path=train_path,
+        tokenizer=tokenizer,
+        max_length=config_manager.dataset_config.max_length
+    )
+
+
     #
     # val_dataset = None
     # if config.dataset_config.val_path:

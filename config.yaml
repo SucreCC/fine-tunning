@@ -31,9 +31,9 @@ model:
 # 数据集配置
 dataset:
   # 训练集路径
-  train_path: "../dataset/moemuu/train.jsonl"
+  train_path: "./data/moemuu/raw/train.jsonl"
   # 验证集路径
-  val_path: "../dataset/moemuu/test.jsonl"
+  val_path: "./dataset/moemuu/raw/test.jsonl"
   # 最大序列长度
   max_length: 2048
   # 是否使用流式加载（节省内存）
