@@ -11,7 +11,8 @@ from core.config.custom_lora_config import CustomLoRAConfig
 from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
-from core.data import CustomDataset, DefaultProcess
+from core.data.custom_dataset import CustomDataset
+from core.data.interface.iml.default_processor import DefaultProcessor
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
 from core.utils import logging
@@ -95,7 +96,7 @@ def init_dataset(
         raise FileNotFoundError(f"数据集不存在: {train_path}")
 
     # 创建数据处理对象
-    process = DefaultProcess(system_template=dataset_config.system_prompt)
+    process = DefaultProcessor(system_template=dataset_config.system_prompt)
 
     # 创建训练数据集（内部会根据 train_ratio 选择子集）
     train_dataset = CustomDataset(
@@ -172,7 +173,7 @@ def main():
     # 初始化模型和分词器
     model, tokenizer = init_model(
         model_config=config_manager.model_config,
-        lora_config=config_manager.customer_lora_config,
+        lora_config=config_manager.custom_lora_config,
         logger=logger
     )
 

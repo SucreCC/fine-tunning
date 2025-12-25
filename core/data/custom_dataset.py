@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
 
-from core.data.interface.base_process import BaseProcess
+from core.data.interface.base_processor import BaseProcessor
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
@@ -20,7 +20,7 @@ class CustomDataset(Dataset):
         self,
         data_path: str,
         tokenizer: PreTrainedTokenizer,
-        process: BaseProcess,
+        process: BaseProcessor,
         max_length: int = 2048,
         train_ratio: float = 1.0,
         seed: Optional[int] = None

@@ -3,10 +3,10 @@
 """
 from typing import Dict
 
-from core.data.interface.base_process import BaseProcess
+from core.data.interface.base_processor import BaseProcessor
 
 
-class DefaultProcess(BaseProcess):
+class DefaultProcessor(BaseProcessor):
     """默认处理类"""
     
     def __init__(self, system_template: str = ""):

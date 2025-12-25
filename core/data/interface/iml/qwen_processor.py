@@ -1,17 +1,17 @@
 """
-ChatGLM 格式处理类
+Qwen 格式处理类
 """
 from typing import Dict
 
-from core.data.interface.base_process import BaseProcess
+from core.data.interface.base_processor import BaseProcessor
 
 
-class ChatGLMProcess(BaseProcess):
-    """ChatGLM 格式处理类"""
+class QwenProcessor(BaseProcessor):
+    """Qwen 格式处理类"""
     
     def __init__(self, system_template: str = ""):
         """
-        初始化 ChatGLM 处理类
+        初始化 Qwen 处理类
         
         Args:
             system_template: 系统提示模板
@@ -20,7 +20,7 @@ class ChatGLMProcess(BaseProcess):
     
     def process(self, item: Dict) -> str:
         """
-        处理单个数据项，使用 ChatGLM 格式
+        处理单个数据项，使用 Qwen 格式
         
         Args:
             item: 包含 system 和 conversation 的字典
@@ -32,16 +32,15 @@ class ChatGLMProcess(BaseProcess):
         system = self.preprocess_text(system)
         conversations = item.get("conversation", [])
         
-        # ChatGLM 格式：[Round 1]\n\n问：...\n\n答：...
-        formatted_text = f"[Round 0]\n\n问：系统提示：{system}\n\n答：好的，我明白了。\n\n"
+        # Qwen 格式使用特殊 token
+        formatted_text = f"<|im_start|>system\n{system}<|im_end|>\n"
         
-        round_num = 1
         for conv in conversations:
             human = self.preprocess_text(conv.get("human", ""))
             assistant = self.preprocess_text(conv.get("assistant", ""))
             
-            formatted_text += f"[Round {round_num}]\n\n问：{human}\n\n答：{assistant}\n\n"
-            round_num += 1
+            formatted_text += f"<|im_start|>user\n{human}<|im_end|>\n"
+            formatted_text += f"<|im_start|>assistant\n{assistant}<|im_end|>\n"
         
-        return formatted_text.strip()
+        return formatted_text
 
