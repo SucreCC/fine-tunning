@@ -4,6 +4,19 @@ service:
   description: mu_xue
   version: 1.0.0
 
+log:
+  service_name: mu_xue
+  log_dir: ./logs
+  log_file: ./logs/mu_xue.log
+  error_file: ./logs/mu_xue.error.log
+  log_level: INFO
+  uvicorn_log_level: INFO
+  uvicorn_access_log_level: WARNING
+  sqlalchemy_log_level: WARNING
+  log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+
 # 模型配置
 model:
   # 基础模型路径（可以是 HuggingFace 模型名称或本地路径）
@@ -66,7 +79,7 @@ lora:
   # LoRA alpha
   lora_alpha: 32
   # LoRA target modules（根据模型类型调整）
-  target_modules: ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"]
+  target_modules: [ "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h" ]
   # LoRA dropout
   lora_dropout: 0.1
 
@@ -91,16 +104,6 @@ wandb:
 
 
 
-  log:
-    service_name: mu_xue
-    log_dir: ./logs
-    log_file: ./logs/mu_xue.log
-    error_file: ./logs/mu_xue.error.log
-    log_level: INFO
-    uvicorn_log_level: INFO
-    uvicorn_access_log_level: WARNING
-    sqlalchemy_log_level: WARNING
-    log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    date_format: "%Y-%m-%d %H:%M:%S"
+
 
 

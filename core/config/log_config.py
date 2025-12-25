@@ -31,3 +31,16 @@ class LogConfig:
             sqlalchemy_log_level=config_dict.get('sqlalchemy_log_level', ""),
 
         )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典"""
+        return {
+            'service_name': self.service_name,
+            'log_format': self.log_format,
+            'date_format': self.date_format,
+            'log_dir': self.log_dir,
+            'log_file': self.log_file,
+            'error_file': self.error_file,
+            'log_level': self.log_level,
+            'uvicorn_log_level': self.uvicorn_log_level,
+        }

@@ -11,7 +11,7 @@ from .dataset_config import DatasetConfig
 from .log_config import LogConfig
 from .lora_config import LoRAConfig
 from .model_config import ModelConfig
-from .other_config import OtherConfig
+from .service_config import ServiceConfig
 from .training_config import TrainingConfig
 from .wandb_config import WandbConfig
 
@@ -19,29 +19,26 @@ from .wandb_config import WandbConfig
 @dataclass
 class ConfigManager:
     """配置管理器类"""
-
+    service_config: Optional[ServiceConfig] = None,
     log_config: Optional[LogConfig] = None,
     model_config: Optional[ModelConfig] = None,
     dataset_config: Optional[DatasetConfig] = None,
     training_config: Optional[TrainingConfig] = None,
     lora_config: Optional[LoRAConfig] = None,
-    other_config: Optional[OtherConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
-
 
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
         """从字典创建配置管理器"""
         return cls(
+            service_config=ServiceConfig.from_dict(config.get("service", {})),
             log_config=LogConfig.from_dict(config.get("log", {})),
             model_config=ModelConfig.from_dict(config.get("model", {})),
             dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
             training_config=TrainingConfig.from_dict(config.get("training", {})),
             lora_config=LoRAConfig.from_dict(config.get("lora", {})),
-            other_config=OtherConfig.from_dict(config.get("other", {})),
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
         )
-
 
     @classmethod
     def from_yaml(cls, config_path: str) -> "ConfigManager":
@@ -65,24 +62,23 @@ class ConfigManager:
                 # 如果已经包含 configs/，则相对于项目根目录
                 project_root = current_dir.parent
                 config_path = str(project_root / config_path)
-        
+
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
-        
-        return cls.from_dict(config)
 
+        return cls.from_dict(config)
 
     def to_dict(self) -> dict:
         """转换为字典"""
         return {
+            "service": self.service_config.to_dict(),
+            "log": self.log_config.to_dict(),
             "model": self.model_config.to_dict(),
             "dataset": self.dataset_config.to_dict(),
             "training": self.training_config.to_dict(),
             "lora": self.lora_config.to_dict(),
-            "other": self.other_config.to_dict(),
             "wandb": self.wandb_config.to_dict(),
         }
-
 
     def to_yaml(self, output_path: str):
         """
@@ -92,7 +88,7 @@ class ConfigManager:
             output_path: 输出文件路径
         """
         config_dict = self.to_dict()
-        
+
         # 处理相对路径
         if not os.path.isabs(output_path):
             current_dir = Path(__file__).parent.absolute()
@@ -101,23 +97,23 @@ class ConfigManager:
             else:
                 project_root = current_dir.parent
                 output_path = str(project_root / output_path)
-        
+
         # 确保输出目录存在
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
+
         with open(output_path, 'w', encoding='utf-8') as f:
             yaml.dump(config_dict, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-
 
     def __repr__(self) -> str:
         """返回配置的字符串表示"""
         return (
             f"ConfigManager(\n"
+            f"  service_config={self.service_config},\n"
+            f"  log_config={self.log_config},\n"
             f"  model_config={self.model_config},\n"
             f"  dataset_config={self.dataset_config},\n"
             f"  training_config={self.training_config},\n"
             f"  lora_config={self.lora_config},\n"
-            f"  other_config={self.other_config},\n"
             f"  wandb_config={self.wandb_config}\n"
             f")"
         )
