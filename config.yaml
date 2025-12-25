@@ -1,4 +1,6 @@
+# ========================
 # 服务配置
+# ========================
 service:
   service_name: mu_xue
   description: mu_xue
@@ -16,104 +18,85 @@ log:
   log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   date_format: "%Y-%m-%d %H:%M:%S"
 
-
+# ========================
 # 模型配置
+# ========================
 model:
-  # 基础模型路径（可以是 HuggingFace 模型名称或本地路径）
   base_model_path: "./model/Qwen2.5-7B-Instruct"
-  # 输出模型保存路径
   output_dir: "./outputs/checkpoints"
-  # 是否使用 8bit 量化（节省显存）
-  use_8bit: false
-  # 是否使用 4bit 量化（更节省显存）
-  use_4bit: false
 
+  # 量化配置（为 QLoRA / LoRA 预留）
+  quantization:
+    enable: false
+    bits: 4                # 4 | 8
+    compute_dtype: bf16    # fp16 | bf16
+
+# ========================
+# 微调策略配置（<<< NEW，核心）
+# ========================
+finetune:
+  strategy: lora           # full | lora | qlora
+  stage: sft               # sft | dpo | rm（先预留）
+
+
+# ========================
+# LoRA 配置（strategy=lora / qlora 时生效）
+# ========================
+lora:
+  enable: true             # 冗余但清晰
+  r: 8
+  lora_alpha: 32
+  target_modules: ["q_proj", "v_proj"]
+  lora_dropout: 0.1
+  bias: "none"
+
+# ========================
 # 数据集配置
+# ========================
 dataset:
-  # 训练集路径
   train_path: "./dataset/moemuu/raw/train.jsonl"
-  # 验证集路径
   val_path: "./dataset/moemuu/raw/test.jsonl"
-  # 最大序列长度
   max_length: 2048
-  # 是否使用流式加载（节省内存）
   streaming: false
-  # 训练集使用百分比（0.0-1.0，1.0 表示使用全部数据，例如 0.8 表示使用 80% 的数据）
   train_ratio: 1.0
-  # 系统提示词，如果在训练集中没有加就会用这个
 
-  # processor
-  processor: qwen_processor
+  # Processor（你设计得很好，保留）
+  processor:
+    type: qwen
+    system_prompt: |
+      你是一个名为沐雪的可爱AI女孩子。
+      你是一个角色扮演的角色。
 
-  system_prompt: |
-    你是一个名为沐雪的可爱AI女孩子.
-    你是一个角色扮演的角色.
-
-# 训练配置
+# ========================
+# 训练参数
+# ========================
 training:
-  # 训练轮数
   num_epochs: 3
-  # 批次大小
   per_device_train_batch_size: 2
-  # 梯度累积步数
   gradient_accumulation_steps: 8
-  # 学习率
   learning_rate: 2.0e-5
-  # 权重衰减
   weight_decay: 0.01
-  # 学习率调度器类型
-  lr_scheduler_type: "cosine"
-  # 预热步数
+  lr_scheduler_type: cosine
   warmup_steps: 100
-  # 保存步数间隔
   save_steps: 500
-  # 评估步数间隔
   eval_steps: 500
-  # 日志记录步数间隔
   logging_steps: 50
-  # 是否使用混合精度训练
-  fp16: true
-  # 是否使用 bf16（需要 A100 等支持）
-  bf16: false
-  # 随机种子
   seed: 42
-  # 最大梯度范数（用于梯度裁剪）
   max_grad_norm: 1.0
 
-# LoRA 配置（如果使用 LoRA 微调）
-lora:
-  # 是否使用 LoRA
-  use_lora: true
-  # LoRA rank
-  r: 8
-  # LoRA alpha
-  lora_alpha: 32
-  # LoRA target modules（根据模型类型调整）
-  target_modules: [ "q_proj", "v_proj" ]
-  # LoRA dropout
-  lora_dropout: 0.1
+  precision:
+    fp16: true
+    bf16: false
 
-# Wandb 配置
+
+# ========================
+# WandB 配置
+# ========================
 wandb:
-  # 是否启用 wandb 日志
   use_wandb: false
-  # wandb API Key（可选）
-  # 注意：建议使用环境变量 WANDB_API_KEY 或运行 `wandb login` 命令
-  # 如果在此处设置，请确保配置文件不会被提交到版本控制系统
   wandb_api_key: null
-  # wandb 项目名称
   wandb_project: "mu_xue_finetuning"
-  # wandb 运行名称（可选，不设置则自动生成）
   wandb_run_name: null
-  # wandb 实体（组织或个人账户，可选）
   wandb_entity: null
-  # wandb 标签（可选）
   wandb_tags: null
-  # wandb 保存目录（可选）
   wandb_dir: null
-
-
-
-
-
-

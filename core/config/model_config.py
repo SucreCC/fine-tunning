@@ -3,6 +3,7 @@
 """
 from dataclasses import dataclass
 from typing import Optional
+from .quantization_config import QuantizationConfig
 
 
 @dataclass
@@ -12,19 +13,22 @@ class ModelConfig:
     base_model_path: str = ""
     # 输出模型保存路径
     output_dir: str = ""
-    # 是否使用 8bit 量化（节省显存）
-    use_8bit: bool = False
-    # 是否使用 4bit 量化（更节省显存）
-    use_4bit: bool = False
+    # 量化配置
+    quantization: Optional[QuantizationConfig] = None
+
+    def __post_init__(self):
+        """初始化默认值"""
+        if self.quantization is None:
+            self.quantization = QuantizationConfig()
 
     @classmethod
     def from_dict(cls, config: dict) -> "ModelConfig":
         """从字典创建配置对象"""
+        quantization_config = config.get("quantization", {})
         return cls(
             base_model_path=config.get("base_model_path", ""),
             output_dir=config.get("output_dir", ""),
-            use_8bit=config.get("use_8bit", False),
-            use_4bit=config.get("use_4bit", False),
+            quantization=QuantizationConfig.from_dict(quantization_config),
         )
 
     def to_dict(self) -> dict:
@@ -32,7 +36,6 @@ class ModelConfig:
         return {
             "base_model_path": self.base_model_path,
             "output_dir": self.output_dir,
-            "use_8bit": self.use_8bit,
-            "use_4bit": self.use_4bit,
+            "quantization": self.quantization.to_dict() if self.quantization else QuantizationConfig().to_dict(),
         }
 

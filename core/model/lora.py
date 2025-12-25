@@ -33,7 +33,7 @@ def setup_lora(model: PreTrainedModel, lora_config: CustomLoRAConfig, model_conf
     logger.info("配置 LoRA...")
     
     # 如果使用量化，准备模型用于训练
-    if model_config.use_4bit or model_config.use_8bit:
+    if model_config.quantization and model_config.quantization.enable:
         model = prepare_model_for_kbit_training(model)
     
     # 确定任务类型

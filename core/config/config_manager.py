@@ -12,6 +12,7 @@ from .model_config import ModelConfig
 from .service_config import ServiceConfig
 from .training_config import TrainingConfig
 from .wandb_config import WandbConfig
+from .finetune_config import FinetuneConfig
 from ..utils.file_utils import find_project_root
 
 
@@ -25,6 +26,7 @@ class ConfigManager:
     training_config: Optional[TrainingConfig] = None,
     custom_lora_config: Optional[CustomLoRAConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
+    finetune_config: Optional[FinetuneConfig] = None,
 
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
@@ -37,6 +39,7 @@ class ConfigManager:
             training_config=TrainingConfig.from_dict(config.get("training", {})),
             custom_lora_config=CustomLoRAConfig.from_dict(config.get("lora", {})),
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
+            finetune_config=FinetuneConfig.from_dict(config.get("finetune", {})),
         )
 
     def to_dict(self) -> dict:
@@ -49,6 +52,7 @@ class ConfigManager:
             "training": self.training_config.to_dict(),
             "lora": self.custom_lora_config.to_dict(),
             "wandb": self.wandb_config.to_dict(),
+            "finetune": self.finetune_config.to_dict() if self.finetune_config else FinetuneConfig().to_dict(),
         }
 
     @classmethod
@@ -87,6 +91,7 @@ class ConfigManager:
             f"  dataset_config={self.dataset_config},\n"
             f"  training_config={self.training_config},\n"
             f"  custom_lora_config={self.custom_lora_config},\n"
-            f"  wandb_config={self.wandb_config}\n"
+            f"  wandb_config={self.wandb_config},\n"
+            f"  finetune_config={self.finetune_config}\n"
             f")"
         )

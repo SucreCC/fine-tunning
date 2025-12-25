@@ -43,24 +43,41 @@ def load_model_and_tokenizer(
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
     quantization_config = None
-    if model_config.use_4bit or model_config.use_8bit:
+    if model_config.quantization and model_config.quantization.enable:
         try:
             from transformers import BitsAndBytesConfig
         except ImportError as e:
             raise RuntimeError(
-                "启用了 4bit/8bit 量化，但 transformers 中未找到 BitsAndBytesConfig"
+                "启用了量化，但 transformers 中未找到 BitsAndBytesConfig。"
+                "请安装 bitsandbytes: pip install bitsandbytes"
             ) from e
 
-        if model_config.use_4bit:
+        # 根据配置的 bits 和 compute_dtype 设置量化
+        if model_config.quantization.bits == 4:
+            # 确定计算数据类型
+            compute_dtype_map = {
+                "fp16": torch.float16,
+                "bf16": torch.bfloat16,
+            }
+            compute_dtype = compute_dtype_map.get(
+                model_config.quantization.compute_dtype,
+                torch.bfloat16
+            )
+            
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_compute_dtype=compute_dtype,
                 bnb_4bit_use_double_quant=True,
             )
-        else:
+        elif model_config.quantization.bits == 8:
             quantization_config = BitsAndBytesConfig(
                 load_in_8bit=True
+            )
+        else:
+            raise ValueError(
+                f"不支持的量化位数: {model_config.quantization.bits}。"
+                f"支持的位数: 4 或 8"
             )
 
     # 3. 加载模型
