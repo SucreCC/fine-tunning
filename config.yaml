@@ -23,7 +23,7 @@ log:
 # ========================
 model:
   base_model_path: "./model/Qwen2.5-7B-Instruct"
-  output_dir: "./outputs/checkpoints"
+  output_dir: "./outputs/checkpoints/Qwen2.5-7B-Instruct"
 
   # 量化配置（为 QLoRA / LoRA 预留）
   quantization:
