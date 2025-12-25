@@ -9,7 +9,7 @@ from peft import (
 )
 from transformers import PreTrainedModel
 
-from core.utils.config import ConfigManager
+from core.config.config_manager import ConfigManager
 
 
 def setup_lora(model: PreTrainedModel, config: ConfigManager) -> PreTrainedModel:
