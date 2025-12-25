@@ -3,15 +3,17 @@
 封装模型和分词器的加载逻辑
 """
 import torch
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     PreTrainedModel,
     PreTrainedTokenizer,
 )
+from peft import PeftModel, PeftMixedModel
 
 from core.dto.config.model_config import ModelConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 from core.utils import logging
 
 logger = logging.get_logger(__name__)
@@ -20,15 +22,21 @@ logger = logging.get_logger(__name__)
 class CustomModel:
     """自定义模型类，封装模型和分词器的加载逻辑"""
     
-    def __init__(self, model_config: ModelConfig):
+    def __init__(
+        self,
+        model_config: ModelConfig,
+        finetune_config: Optional[BaseFinetuningConfig] = None,
+    ):
         """
         初始化 CustomModel
         
         Args:
             model_config: 模型配置
+            finetune_config: 微调配置，如果提供且 enable 为 True，则会在加载模型后自动应用
         """
         self.model_config = model_config
-        self.model: Optional[PreTrainedModel] = None
+        self.finetune_config = finetune_config
+        self.model: Optional[Union[PreTrainedModel, PeftModel, PeftMixedModel]] = None
         self.tokenizer: Optional[PreTrainedTokenizer] = None
         self._quantization_config = None
     
@@ -127,9 +135,46 @@ class CustomModel:
         
         return model
     
-    def load(self) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
+    def _setup_finetuning(self) -> Union[PreTrainedModel, PeftModel, PeftMixedModel]:
         """
-        加载模型和分词器
+        设置微调策略
+        
+        Returns:
+            应用了微调策略的模型
+        """
+        if self.model is None:
+            raise ValueError("模型尚未加载，请先调用 _load_model() 方法")
+        
+        if self.finetune_config is None:
+            logger.info("未提供微调配置，使用全量模型训练")
+            return self.model
+        
+        # 动态获取微调实现类
+        from core.dto.enums.finetuning_enum import FinetuneEnum
+        
+        finetune_type = self.finetune_config.type
+        
+        # 处理 full 策略（全量微调，不需要特殊处理）
+        if finetune_type == "full":
+            logger.info("使用全量微调，无需应用微调策略")
+            return self.model
+        
+        finetune_class = FinetuneEnum.get_finetune_class_by_type(finetune_type)
+        
+        # 创建微调实例并应用
+        finetune_instance = finetune_class()
+        self.model = finetune_instance.setup(
+            model=self.model,
+            finetune_config=self.finetune_config,
+            model_config=self.model_config,
+        )
+        
+        logger.info(f"微调策略 '{finetune_type}' 设置成功")
+        return self.model
+    
+    def load(self) -> Tuple[Union[PreTrainedModel, PeftModel, PeftMixedModel], PreTrainedTokenizer]:
+        """
+        加载模型和分词器，并应用微调策略（如果提供）
         
         Returns:
             (model, tokenizer) 元组
@@ -141,6 +186,10 @@ class CustomModel:
         self.model = self._load_model()
         
         logger.info(f"模型和分词器加载成功: {self.model_config.base_model_path}")
+        
+        # 如果提供了微调配置，应用微调策略
+        if self.finetune_config is not None:
+            self.model = self._setup_finetuning()
         
         return self.model, self.tokenizer
     
@@ -159,19 +208,3 @@ class CustomModel:
         self.tokenizer.save_pretrained(save_path)
         logger.info("保存完成")
 
-
-# 为了向后兼容，保留函数接口
-def load_model_and_tokenizer(
-    model_config: ModelConfig,
-) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
-    """
-    加载模型和分词器（向后兼容函数）
-    
-    Args:
-        model_config: 模型配置
-    
-    Returns:
-        (model, tokenizer) 元组
-    """
-    custom_model = CustomModel(model_config)
-    return custom_model.load()

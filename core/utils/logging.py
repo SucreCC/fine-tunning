@@ -7,7 +7,10 @@
 import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from core.config.log_config import LogConfig
+
+from core.dto.config.log_config import LogConfig
+
+
 def setup_logging(config: LogConfig) -> None:
     """
     配置日志系统

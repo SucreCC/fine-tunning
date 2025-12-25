@@ -5,7 +5,8 @@
 import importlib
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
-from core.config.dataset_config import DatasetConfig
+
+from core.dto.config.dataset_config import DatasetConfig
 from core.utils import logging
 logger = logging.get_logger(__name__)
 
