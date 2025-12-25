@@ -1,9 +1,9 @@
 """
 训练入口脚本
 """
-import os
 from logging import Logger
 
+from transformers import PreTrainedModel
 from transformers import PreTrainedTokenizer
 
 from core.config.config_manager import ConfigManager
@@ -12,6 +12,7 @@ from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
 from core.data.custom_dataset import CustomDataset
+from core.data.interface.base_processor import BaseProcessor
 from core.data.interface.iml.default_processor import DefaultProcessor
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
@@ -19,7 +20,6 @@ from core.utils import logging
 from core.utils.file_utils import find_project_root
 from core.utils.logging import setup_logging
 from core.utils.seed import set_seed
-from transformers import PreTrainedModel
 
 PROJECT_ROOT = find_project_root()
 
@@ -43,9 +43,9 @@ def init_output_dir(model_config: ModelConfig):
 
 
 def init_model(
-    model_config: ModelConfig,
-    lora_config: CustomLoRAConfig,
-    logger: Logger
+        model_config: ModelConfig,
+        lora_config: CustomLoRAConfig,
+        logger: Logger
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     """
     初始化模型和分词器，并设置 LoRA（如果启用）
@@ -68,93 +68,9 @@ def init_model(
         logger.info("LoRA 设置成功")
     else:
         logger.info("未启用 LoRA，使用全量模型训练")
-    
+
     return model, tokenizer
 
-
-def init_dataset(
-        dataset_config: DatasetConfig,
-        tokenizer: PreTrainedTokenizer,
-        seed: int,
-        logger: Logger
-) -> CustomDataset:
-    """
-    初始化训练数据集
-    
-    Args:
-        dataset_config: 数据集配置
-        tokenizer: 分词器
-        seed: 随机种子
-        logger: 日志记录器
-        
-    Returns:
-        CustomDataset 实例
-    """
-    train_path = dataset_config.train_path
-    # 检查数据集是否存在
-    if not os.path.exists(train_path):
-        raise FileNotFoundError(f"数据集不存在: {train_path}")
-
-    # 创建数据处理对象
-    process = DefaultProcessor(system_template=dataset_config.system_prompt)
-
-    # 创建训练数据集（内部会根据 train_ratio 选择子集）
-    train_dataset = CustomDataset(
-        data_path=train_path,
-        tokenizer=tokenizer,
-        process=process,
-        max_length=dataset_config.max_length,
-        train_ratio=dataset_config.train_ratio,
-        seed=seed
-    )
-    logger.info(f"训练集初始化完毕，训练集大小: {len(train_dataset)} 条数据")
-
-    return train_dataset
-
-
-def init_val_dataset(
-        dataset_config: DatasetConfig,
-        tokenizer: PreTrainedTokenizer,
-        logger: Logger
-) -> CustomDataset | None:
-    """
-    初始化验证数据集（测试集）
-    
-    Args:
-        dataset_config: 数据集配置
-        tokenizer: 分词器
-        logger: 日志记录器
-        
-    Returns:
-        CustomDataset 实例，如果验证集路径不存在或为空则返回 None
-    """
-    val_path = dataset_config.val_path
-    
-    # 如果没有配置验证集路径，返回 None
-    if not val_path:
-        logger.info("未配置验证集路径，跳过验证集初始化")
-        return None
-    
-    # 检查验证集是否存在
-    if not os.path.exists(val_path):
-        logger.warning(f"验证集文件不存在: {val_path}，跳过验证集初始化")
-        return None
-
-    # 创建数据处理对象
-    process = DefaultProcess(system_template=dataset_config.system_prompt)
-
-    # 创建验证数据集（验证集使用全部数据，不应用 train_ratio）
-    val_dataset = CustomDataset(
-        data_path=val_path,
-        tokenizer=tokenizer,
-        process=process,
-        max_length=dataset_config.max_length,
-        train_ratio=1.0,  # 验证集使用全部数据
-        seed=None  # 验证集不需要随机种子
-    )
-    logger.info(f"验证集初始化完毕，验证集大小: {len(val_dataset)} 条数据")
-
-    return val_dataset
 
 
 def main():
@@ -177,23 +93,25 @@ def main():
         logger=logger
     )
 
+    # 创建数据处理对象
+    processor = DefaultProcessor(system_template=config_manager.dataset_config.system_prompt)
+
     # 初始化训练数据集
-    train_dataset = init_dataset(
+    train_dataset = CustomDataset.from_config(
         dataset_config=config_manager.dataset_config,
         tokenizer=tokenizer,
+        processor=processor,
         seed=config_manager.training_config.seed,
-        logger=logger
     )
 
     # 初始化验证数据集
-    val_dataset = init_val_dataset(
+    val_dataset = CustomDataset.from_config_val(
         dataset_config=config_manager.dataset_config,
         tokenizer=tokenizer,
-        logger=logger
+        processor=processor
     )
 
     # 创建 Trainer
-
     trainer = create_trainer(
         model=model,
         tokenizer=tokenizer,
@@ -202,7 +120,6 @@ def main():
         config=config_manager
     )
     logger.info("创建 Trainer 成功")
-
 
     #
     # # 添加回调
