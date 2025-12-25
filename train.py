@@ -6,12 +6,13 @@ from logging import Logger
 from transformers import PreTrainedModel
 from transformers import PreTrainedTokenizer
 
-from core.config.config_manager import ConfigManager
-from core.config.custom_lora_config import CustomLoRAConfig
-from core.config.log_config import LogConfig
-from core.config.model_config import ModelConfig
+
 from core.data.custom_dataset import CustomDataset
 from core.data.interface.base_processor import BaseProcessor
+from core.dto.config.config_manager import ConfigManager
+from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.log_config import LogConfig
+from core.dto.config.model_config import ModelConfig
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
 from core.utils import logging
@@ -42,7 +43,7 @@ def init_output_dir(model_config: ModelConfig):
 
 def init_model(
         model_config: ModelConfig,
-        lora_config: CustomLoRAConfig,
+        base_finetune_config: BaseFinetuneConfig,
         logger: Logger
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     """
@@ -61,7 +62,7 @@ def init_model(
     logger.info(f"加载模型和分词器成功: {model_config.base_model_path}")
 
     # 设置 LoRA（如果启用）
-    model = setup_lora(model, lora_config, model_config)
+    model = setup_lora(model, base_finetune_config, model_config)
     if lora_config.use_lora:
         logger.info("LoRA 设置成功")
     else:
@@ -115,7 +116,7 @@ def main():
     # 初始化模型和分词器
     model, tokenizer = init_model(
         model_config=config_manager.model_config,
-        lora_config=config_manager.custom_lora_config,
+        lora_config=config_manager.finetune_config,
         logger=logger
     )
 
