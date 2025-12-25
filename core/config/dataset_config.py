@@ -16,6 +16,8 @@ class DatasetConfig:
     max_length: int = 2048
     # 是否使用流式加载（节省内存）
     streaming: bool = False
+    # 训练集使用百分比（0.0-1.0，1.0 表示使用全部数据）
+    train_ratio: float = 1.0
 
     @classmethod
     def from_dict(cls, config: dict) -> "DatasetConfig":
@@ -25,6 +27,7 @@ class DatasetConfig:
             val_path=config.get("val_path", ""),
             max_length=config.get("max_length"),
             streaming=config.get("streaming", False),
+            train_ratio=config.get("train_ratio", 1.0),
         )
 
     def to_dict(self) -> dict:
@@ -34,5 +37,6 @@ class DatasetConfig:
             "val_path": self.val_path,
             "max_length": self.max_length,
             "streaming": self.streaming,
+            "train_ratio": self.train_ratio,
         }
 

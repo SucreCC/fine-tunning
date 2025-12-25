@@ -38,6 +38,8 @@ dataset:
   max_length: 2048
   # 是否使用流式加载（节省内存）
   streaming: false
+  # 训练集使用百分比（0.0-1.0，1.0 表示使用全部数据，例如 0.8 表示使用 80% 的数据）
+  train_ratio: 1.0
 
 # 训练配置
 training:

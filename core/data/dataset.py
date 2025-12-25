@@ -3,6 +3,7 @@
 Dataset 和 DataCollator
 """
 import json
+import random
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
@@ -16,7 +17,9 @@ class ConversationDataset(Dataset):
         data_path: str,
         tokenizer: PreTrainedTokenizer,
         max_length: int = 2048,
-        system_template: str = "你是一个名为沐雪的可爱AI女孩子"
+        system_template: str = "你是一个名为沐雪的可爱AI女孩子",
+        train_ratio: float = 1.0,
+        seed: Optional[int] = None
     ):
         """
         初始化数据集
@@ -26,16 +29,28 @@ class ConversationDataset(Dataset):
             tokenizer: 分词器
             max_length: 最大序列长度
             system_template: 系统提示模板
+            train_ratio: 训练集使用比例（0.0-1.0，1.0 表示使用全部数据）
+            seed: 随机种子，用于数据子集选择的可重复性
         """
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.system_template = system_template
+        self.train_ratio = train_ratio
+        self.seed = seed
         
         # 加载数据
         self.data = self._load_data(data_path)
     
     def _load_data(self, data_path: str) -> List[Dict]:
-        """加载 JSONL 数据"""
+        """
+        加载 JSONL 数据，并根据 train_ratio 选择子集
+        
+        Args:
+            data_path: JSONL 数据文件路径
+            
+        Returns:
+            数据列表（可能根据 train_ratio 进行了子集选择）
+        """
         data = []
         with open(data_path, 'r', encoding='utf-8') as f:
             for line in f:
@@ -47,6 +62,27 @@ class ConversationDataset(Dataset):
                     except json.JSONDecodeError as e:
                         print(f"解析 JSON 失败: {line[:100]}... 错误: {e}")
                         continue
+        
+        # 根据 train_ratio 选择子集
+        if self.train_ratio < 1.0:
+            total_size = len(data)
+            subset_size = int(total_size * self.train_ratio)
+            
+            # 设置随机种子以确保可重复性
+            if self.seed is not None:
+                random.seed(self.seed)
+            
+            # 随机打乱并选择子集
+            indices = list(range(total_size))
+            random.shuffle(indices)
+            selected_indices = sorted(indices[:subset_size])  # 排序以保持原始顺序
+            
+            data = [data[i] for i in selected_indices]
+            print(
+                f"使用数据集的 {self.train_ratio*100:.1f}%: "
+                f"从 {total_size} 条数据中选择 {subset_size} 条"
+            )
+        
         return data
     
     def _format_conversation(self, item: Dict) -> str:

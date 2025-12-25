@@ -2,8 +2,12 @@
 训练入口脚本
 """
 import os
+from logging import Logger
+
+from transformers import PreTrainedTokenizer
 
 from core.config.config_manager import ConfigManager
+from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
 from core.data import ConversationDataset
@@ -34,6 +38,42 @@ def init_output_dir(model_config: ModelConfig):
     return output_dir
 
 
+def init_dataset(
+        dataset_config: DatasetConfig,
+        tokenizer: PreTrainedTokenizer,
+        seed: int,
+        logger: Logger
+) -> ConversationDataset:
+    """
+    初始化训练数据集
+    
+    Args:
+        dataset_config: 数据集配置
+        tokenizer: 分词器
+        seed: 随机种子
+        logger: 日志记录器
+        
+    Returns:
+        ConversationDataset 实例
+    """
+    train_path = dataset_config.train_path
+    # 检查数据集是否存在
+    if not os.path.exists(train_path):
+        raise FileNotFoundError(f"数据集不存在: {train_path}")
+
+    # 创建训练数据集（内部会根据 train_ratio 选择子集）
+    train_dataset = ConversationDataset(
+        data_path=train_path,
+        tokenizer=tokenizer,
+        max_length=dataset_config.max_length,
+        train_ratio=dataset_config.train_ratio,
+        seed=seed
+    )
+    logger.info(f"训练集初始化完毕，训练集大小: {len(train_dataset)} 条数据")
+
+    return train_dataset
+
+
 def main():
     """主训练函数"""
     config_manager = init_config()
@@ -49,24 +89,17 @@ def main():
     model, tokenizer = load_model_and_tokenizer(config_manager.model_config)
     logger.info(f"加载模型 和 tokenizer 成功: {config_manager.model_config.base_model_path}")
 
-
     # 设置 LoRA（如果启用）
     model = setup_lora(model, config_manager.customer_lora_config, config_manager.model_config)
     logger.info("设置 LoRA 成功")
 
-    train_path = config_manager.dataset_config.train_path
-    # 检查数据集是否存在
-    if not os.path.exists(train_path):
-        raise FileNotFoundError(f"数据集不存在: {train_path}")
-
-
-
-    train_dataset = ConversationDataset(
-        data_path=train_path,
+    # 初始化训练数据集
+    train_dataset = init_dataset(
+        dataset_config=config_manager.dataset_config,
         tokenizer=tokenizer,
-        max_length=config_manager.dataset_config.max_length
+        seed=config_manager.training_config.seed,
+        logger=logger
     )
-
 
     #
     # val_dataset = None
