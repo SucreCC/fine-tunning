@@ -88,7 +88,7 @@ def main():
 
 
 
-    # 创建 Trainer
+    # 创建 Trainer（回调会自动添加）
     trainer = CustomTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -98,15 +98,9 @@ def main():
     )
     logger.info("创建 Trainer 成功")
 
-    #
-    # # 添加回调
-    # callbacks = get_callbacks(config)
-    # for callback in callbacks:
-    #     trainer.add_callback(callback)
-    #
-    # # 开始训练
-    # print("开始训练...")
-    # trainer.train()
+    # 开始训练
+    logger.info("开始训练...")
+    trainer.train()
     #
     # # 保存最终模型
     # print("保存模型...")

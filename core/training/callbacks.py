@@ -87,24 +87,4 @@ class WandbCallback(TrainerCallback):
             wandb.finish()
 
 
-def get_callbacks(config) -> list:
-    """
-    获取回调函数列表
-    
-    Args:
-        config: 配置管理器
-        
-    Returns:
-        回调函数列表
-    """
-    callbacks = []
-    
-    # 添加 Wandb 回调
-    if config.wandb_config.use_wandb:
-        callbacks.append(WandbCallback(config.wandb_config))
-    
-    # 可以在这里添加其他回调
-    # callbacks.append(GenerationCallback(tokenizer, prompts=["你好"]))
-    
-    return callbacks
 

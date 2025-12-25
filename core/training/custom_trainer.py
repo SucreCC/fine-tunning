@@ -17,6 +17,12 @@ from core.utils import logging
 
 logger = logging.get_logger(__name__)
 
+# 延迟导入回调类，避免循环导入
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
 
 class CustomTrainer(Trainer):
     """自定义 Trainer 类，封装训练逻辑"""
@@ -76,6 +82,23 @@ class CustomTrainer(Trainer):
             self.tokenizer = tokenizer
         
         self.config = config
+        
+        # 自动添加回调（如果提供了 config）
+        if config is not None:
+            self._add_callbacks(config)
+    
+    def _add_callbacks(self, config: ConfigManager):
+        """
+        根据配置自动添加回调
+        
+        Args:
+            config: 配置管理器
+        """
+        # 添加 Wandb 回调
+        if config.wandb_config.use_wandb:
+            from core.training.callbacks import WandbCallback
+            self.add_callback(WandbCallback(config.wandb_config))
+            logger.info("已添加 Wandb 回调")
     
     def _setup_devices(self):
         """
