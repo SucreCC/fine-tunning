@@ -48,7 +48,7 @@ def main():
     output_dir = init_output_dir(config_manager.model_config)
     logger.info(f"模型输出目录: {output_dir}")
 
-    model, tokenizer = load_model_and_tokenizer(config_manager)
+    model, tokenizer = load_model_and_tokenizer(config_manager.model_config)
 
 
     # load_model_and_tokenizer(config_manager.model_config)
