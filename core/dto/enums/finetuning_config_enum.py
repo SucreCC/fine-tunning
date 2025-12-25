@@ -3,15 +3,13 @@
 根据 strategy 名称获取对应的配置类 & 配置文件名
 """
 import importlib
-import types
 from enum import Enum
 from typing import Type, Optional
-
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
-from core.dto.config.finetune_config.interface.iml.ia3_config import IA3Config
-from core.dto.config.finetune_config.interface.iml.lora_config import LoRAConfig
-from core.dto.config.finetune_config.interface.iml.p_tuning_config import PTuningConfig
-from core.dto.config.finetune_config.interface.iml.prefix_tuning_config import PrefixTuningConfig
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
+from core.dto.config.finetune_config.iml.ia3_config import IA3Config
+from core.dto.config.finetune_config.iml.lora_config import LoRAConfig
+from core.dto.config.finetune_config.iml.p_tuning_config import PTuningConfig
+from core.dto.config.finetune_config.iml.prefix_tuning_config import PrefixTuningConfig
 
 
 class FinetuneStrategyEnum(Enum):
@@ -79,7 +77,7 @@ class FinetuneStrategyEnum(Enum):
                 # 根据 strategy_name 生成模块名（添加 _config 后缀）
                 module_name = f"{item.strategy_name}_config"
                 # 构建完整的模块路径
-                module_path = f"core.dto.config.finetune_config.interface.iml.{module_name}"
+                module_path = f"core.dto.config.finetune_config.iml.{module_name}"
                 
                 # 根据 finetune_type 生成配置类名
                 class_name = cls._get_config_class_name(finetune_type)

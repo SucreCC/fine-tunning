@@ -3,8 +3,7 @@ IA3 (Infused Adapter by Inhibiting and Amplifying Inner Activations) 配置类
 """
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
-
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
 
 
 @dataclass

@@ -12,9 +12,9 @@ from peft import (
 )
 from transformers import PreTrainedModel
 
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
+from core.dto.config.finetune_config.iml.lora_config import LoRAConfig
 from core.model.finetune.base_custom_fintuning import BaseCustomFinetuning
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
-from core.dto.config.finetune_config.interface.iml.lora_config import LoRAConfig
 from core.dto.config.model_config import ModelConfig
 from core.utils import logging
 

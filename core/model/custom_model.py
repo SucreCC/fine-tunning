@@ -12,8 +12,8 @@ from transformers import (
 )
 from peft import PeftModel, PeftMixedModel
 
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
 from core.dto.config.model_config import ModelConfig
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 from core.utils import logging
 
 logger = logging.get_logger(__name__)

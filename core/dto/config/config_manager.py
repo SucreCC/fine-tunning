@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Optional
 import yaml
 from .dataset_config import DatasetConfig
-from .finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
+from .finetune_config.base_finetuning_config import BaseFinetuningConfig
 from .log_config import LogConfig
 from .model_config import ModelConfig
 from .service_config import ServiceConfig

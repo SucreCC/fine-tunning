@@ -6,8 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 from transformers import PreTrainedModel
 from peft import PeftModel, PeftMixedModel
-
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
 from core.dto.config.model_config import ModelConfig
 
 

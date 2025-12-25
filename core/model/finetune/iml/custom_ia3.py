@@ -12,9 +12,8 @@ from peft import (
 )
 from transformers import PreTrainedModel
 
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
 from core.model.finetune.base_custom_fintuning import BaseCustomFinetuning
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
-from core.dto.config.finetune_config.interface.iml.ia3_config import IA3Config as IA3ConfigDTO
 from core.dto.config.model_config import ModelConfig
 from core.utils import logging
 
@@ -42,10 +41,10 @@ class CustomIA3(BaseCustomFinetuning):
             应用了 IA3 的模型
         """
         # 类型检查
-        if not isinstance(finetune_config, IA3ConfigDTO):
+        if not isinstance(finetune_config, IA3Config):
             raise TypeError(f"finetune_config 必须是 IA3Config 类型，但得到 {type(finetune_config)}")
         
-        ia3_config: IA3ConfigDTO = finetune_config
+        ia3_config: IA3Config = finetune_config
         
         logger.info("配置 IA3...")
         

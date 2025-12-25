@@ -5,7 +5,7 @@ AdaLoRA 是 LoRA 的改进版本，可以自适应调整 rank
 from dataclasses import dataclass
 from typing import List, Optional, Literal, cast, Dict, Any
 
-from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
+from core.dto.config.finetune_config.base_finetuning_config import BaseFinetuningConfig
 
 
 @dataclass
