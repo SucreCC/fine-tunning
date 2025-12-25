@@ -101,19 +101,19 @@ def main():
     # 开始训练
     logger.info("开始训练...")
     trainer.train()
-    #
-    # # 保存最终模型
-    # print("保存模型...")
-    # if config.lora_config.use_lora:
-    #     # LoRA 模型保存
-    #     model.save_pretrained(str(output_dir / "lora_model"))
-    #     tokenizer.save_pretrained(str(output_dir / "lora_model"))
-    # else:
-    #     # 全量模型保存
-    #     trainer.save_model(str(output_dir / "final_model"))
-    #     tokenizer.save_pretrained(str(output_dir / "final_model"))
-    #
-    # print("训练完成！")
+
+    # 保存最终模型
+    print("保存模型...")
+    if config.lora_config.use_lora:
+        # LoRA 模型保存
+        model.save_pretrained(str(output_dir / "lora_model"))
+        tokenizer.save_pretrained(str(output_dir / "lora_model"))
+    else:
+        # 全量模型保存
+        trainer.save_model(str(output_dir / "final_model"))
+        tokenizer.save_pretrained(str(output_dir / "final_model"))
+
+    print("训练完成！")
 
 
 if __name__ == "__main__":
