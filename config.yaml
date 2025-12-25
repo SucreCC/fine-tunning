@@ -37,16 +37,7 @@ model:
 finetune:
   strategy: lora           # full | lora | qlora | prefix_tuning | p_tuning | adalora | ia3
   stage: sft               # sft | dpo | rm（先预留）
-  
-  # LoRA / QLoRA 配置（strategy=lora / qlora 时生效）
-  lora:
-    enable: true
-    r: 8
-    lora_alpha: 32
-    target_modules: ["q_proj", "v_proj"]
-    lora_dropout: 0.1
-    bias: "none"
-  
+
   # Prefix Tuning 配置（strategy=prefix_tuning 时生效）
   prefix_tuning:
     enable: true

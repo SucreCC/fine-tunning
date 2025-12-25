@@ -12,10 +12,6 @@ from core.dto.config.finetune_config.interface.iml.p_tuning_config import PTunin
 from core.dto.config.finetune_config.interface.iml.prefix_tuning_config import PrefixTuningConfig
 
 
-class CustomLoRAConfig:
-    pass
-
-
 class FinetuneStrategyEnum(Enum):
     """微调策略枚举"""
 
