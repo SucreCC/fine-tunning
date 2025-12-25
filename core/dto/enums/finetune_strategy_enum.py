@@ -4,19 +4,21 @@
 """
 from enum import Enum
 from typing import Type
-from ..config.finetune_config.base_finetune_config import BaseFinetuneConfig
-from ..config.custom_lora_config import CustomLoRAConfig
-from ..config.finetune_config.prefix_tuning_config import PrefixTuningConfig
-from ..config.finetune_config.p_tuning_config import PTuningConfig
-from ..config.finetune_config.ada_lora_config import AdaLoRAConfig
-from ..config.finetune_config.ia3_config import IA3Config
+
+from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.iml.ada_lora_config import AdaLoRAConfig
+from core.dto.config.finetune_config.interface.iml.ia3_config import IA3Config
+from core.dto.config.finetune_config.interface.iml.p_tuning_config import PTuningConfig
+from core.dto.config.finetune_config.interface.iml.prefix_tuning_config import PrefixTuningConfig
+
+
+class CustomLoRAConfig:
+    pass
 
 
 class FinetuneStrategyEnum(Enum):
     """微调策略枚举"""
-    
-    LORA = ("lora", CustomLoRAConfig)
-    QLORA = ("qlora", CustomLoRAConfig)  # QLoRA 也使用 CustomLoRAConfig
+
     PREFIX_TUNING = ("prefix_tuning", PrefixTuningConfig)
     P_TUNING = ("p_tuning", PTuningConfig)
     PTUNING = ("ptuning", PTuningConfig)  # 别名
