@@ -19,6 +19,9 @@ class DatasetConfig:
     # 训练集使用百分比（0.0-1.0，1.0 表示使用全部数据）
     train_ratio: float = 1.0
 
+    # 系统提示词，如果在训练集中没有加就会用这个
+    system_prompt: str = ""
+
     @classmethod
     def from_dict(cls, config: dict) -> "DatasetConfig":
         """从字典创建配置对象"""
@@ -28,6 +31,7 @@ class DatasetConfig:
             max_length=config.get("max_length"),
             streaming=config.get("streaming", False),
             train_ratio=config.get("train_ratio", 1.0),
+            system_prompt=config.get("system_prompt", ""),
         )
 
     def to_dict(self) -> dict:
@@ -38,5 +42,6 @@ class DatasetConfig:
             "max_length": self.max_length,
             "streaming": self.streaming,
             "train_ratio": self.train_ratio,
+            "system_prompt": self.system_prompt,
         }
 
