@@ -5,11 +5,11 @@ AdaLoRA 是 LoRA 的改进版本，可以自适应调整 rank
 from dataclasses import dataclass
 from typing import List, Optional, Literal, cast, Dict, Any
 
-from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 
 
 @dataclass
-class LoRAConfig(BaseFinetuneConfig):
+class LoRAConfig(BaseFinetuningConfig):
     """AdaLoRA 配置"""
     # 是否启用 AdaLoRA
     enable: bool = True
@@ -45,7 +45,7 @@ class LoRAConfig(BaseFinetuneConfig):
             ]
     
     @classmethod
-    def from_dict(cls, config: dict) -> "LoRAConfig":
+    def from_dict(cls, config: dict) -> "BaseFinetuningConfig":
         """从字典创建配置对象"""
         target_modules = config.get(
             "target_modules",

@@ -4,11 +4,11 @@ P-Tuning 配置类
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any, Literal
 
-from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 
 
 @dataclass
-class PTuningConfig(BaseFinetuneConfig):
+class PTuningConfig(BaseFinetuningConfig):
     """P-Tuning 配置"""
     # 是否启用 P-Tuning
     enable: bool = True
@@ -24,7 +24,7 @@ class PTuningConfig(BaseFinetuneConfig):
     task_type: str = "CAUSAL_LM"
     
     @classmethod
-    def from_dict(cls, config: dict) -> "PTuningConfig":
+    def from_dict(cls, config: dict) -> "BaseFinetuningConfig":
         """从字典创建配置对象"""
         return cls(
             type=config.get("type", "p_tuning"),  # 从 BaseFinetuneConfig 继承的字段

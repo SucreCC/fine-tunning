@@ -4,11 +4,11 @@ IA3 (Infused Adapter by Inhibiting and Amplifying Inner Activations) 配置类
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
-from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 
 
 @dataclass
-class IA3Config(BaseFinetuneConfig):
+class IA3Config(BaseFinetuningConfig):
     """IA3 配置"""
     # 是否启用 IA3
     enable: bool = True
@@ -27,7 +27,7 @@ class IA3Config(BaseFinetuneConfig):
             self.feedforward_modules = []
     
     @classmethod
-    def from_dict(cls, config: dict) -> "IA3Config":
+    def from_dict(cls, config: dict) -> "BaseFinetuningConfig":
         """从字典创建配置对象"""
         target_modules = config.get(
             "target_modules",

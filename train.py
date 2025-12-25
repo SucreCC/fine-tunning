@@ -10,7 +10,7 @@ from transformers import PreTrainedTokenizer
 from core.data.custom_dataset import CustomDataset
 from core.data.interface.base_processor import BaseProcessor
 from core.dto.config.config_manager import ConfigManager
-from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import BaseFinetuneConfig
 from core.dto.config.log_config import LogConfig
 from core.dto.config.model_config import ModelConfig
 from core.model import load_model_and_tokenizer, setup_lora

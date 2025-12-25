@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Optional
 import yaml
 from .dataset_config import DatasetConfig
-from .finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from .finetune_config.interface.base_finetuning_config import BaseFinetuningConfig
 from .log_config import LogConfig
 from .model_config import ModelConfig
 from .service_config import ServiceConfig
@@ -24,7 +24,7 @@ class ConfigManager:
     dataset_config: Optional[DatasetConfig] = None,
     training_config: Optional[TrainingConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
-    finetune_config: Optional[BaseFinetuneConfig] = None,
+    finetune_config: Optional[BaseFinetuningConfig] = None,
 
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
@@ -36,7 +36,7 @@ class ConfigManager:
             dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
             training_config=TrainingConfig.from_dict(config.get("training", {})),
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
-            finetune_config=BaseFinetuneConfig.from_dict(config.get("finetune", {})),
+            finetune_config=BaseFinetuningConfig.from_dict(config.get("finetune", {})),
         )
 
     def to_dict(self) -> dict:

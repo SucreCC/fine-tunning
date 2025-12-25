@@ -7,17 +7,17 @@ from dataclasses import dataclass
 from typing import Dict, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from core.dto.enums.finetune_config_enum import FinetuneStrategyEnum
+    from core.dto.enums.finetuning_config_enum import FinetuneStrategyEnum
 
 
 @dataclass
-class BaseFinetuneConfig(ABC):
+class BaseFinetuningConfig(ABC):
     """微调配置基类"""
     type: str
     stage: str = "sft"
 
     @classmethod
-    def from_dict(cls, finetune_config: dict) -> "BaseFinetuneConfig":
+    def from_dict(cls, finetune_config: dict) -> "BaseFinetuningConfig":
         """
         从字典创建配置对象
 
@@ -28,7 +28,7 @@ class BaseFinetuneConfig(ABC):
             配置对象实例
         """
         # 延迟导入以避免循环导入
-        from core.dto.enums.finetune_config_enum import FinetuneStrategyEnum
+        from core.dto.enums.finetuning_config_enum import FinetuneStrategyEnum
         
         finetune_type = finetune_config.get("type")
         if not finetune_type:

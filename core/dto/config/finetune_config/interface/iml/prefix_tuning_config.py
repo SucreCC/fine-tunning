@@ -3,12 +3,11 @@ Prefix Tuning 配置类
 """
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
-
-from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
+from core.dto.config.finetune_config.interface.base_finetuning_config import  BaseFinetuningConfig
 
 
 @dataclass
-class PrefixTuningConfig(BaseFinetuneConfig):
+class PrefixTuningConfig(BaseFinetuningConfig):
     """Prefix Tuning 配置"""
     # 是否启用 Prefix Tuning
     enable: bool = True
@@ -22,7 +21,7 @@ class PrefixTuningConfig(BaseFinetuneConfig):
     task_type: str = "CAUSAL_LM"
     
     @classmethod
-    def from_dict(cls, config: dict) -> "PrefixTuningConfig":
+    def from_dict(cls, config: dict) -> "BaseFinetuningConfig":
         """从字典创建配置对象"""
         return cls(
             type=config.get("type", "prefix_tuning"),  # 从 BaseFinetuneConfig 继承的字段
