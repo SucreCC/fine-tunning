@@ -13,6 +13,7 @@ from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
 from core.data import ConversationDataset
 from core.model import load_model_and_tokenizer, setup_lora
+from core.training import create_trainer
 from core.utils import logging
 from core.utils.file_utils import find_project_root
 from core.utils.logging import setup_logging
@@ -184,15 +185,18 @@ def main():
         logger=logger
     )
 
-    # # 创建 Trainer
-    # print("创建 Trainer...")
-    # trainer = create_trainer(
-    #     model=model,
-    #     tokenizer=tokenizer,
-    #     train_dataset=train_dataset,
-    #     eval_dataset=val_dataset,
-    #     config=config
-    # )
+    # 创建 Trainer
+
+    trainer = create_trainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        config=config_manager
+    )
+    logger.info("创建 Trainer 成功")
+
+
     #
     # # 添加回调
     # callbacks = get_callbacks(config)
