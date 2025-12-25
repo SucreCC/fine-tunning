@@ -32,7 +32,14 @@ class DeviceConfig:
     """设备配置"""
     # 是否使用 CUDA（None 表示自动检测）
     use_cuda: Optional[bool] = None
-    # 分布式训练后端（"nccl" 用于多 GPU，"gloo" 用于 CPU，None 表示不使用分布式）
+    # 并行策略（"ddp" | "deepspeed" | "fsdp" | null）
+    # - "ddp": DistributedDataParallel，单机多卡或多机多卡
+    # - "deepspeed": DeepSpeed ZeRO，需要 deepspeed 配置文件
+    # - "fsdp": Fully Sharded Data Parallel，PyTorch FSDP
+    # - null: 不使用并行（单卡训练）
+    parallel_strategy: Optional[str] = None
+    # 分布式训练后端（"nccl" 用于多 GPU，"gloo" 用于 CPU，None 表示自动选择）
+    # 当 parallel_strategy="ddp" 时使用
     ddp_backend: Optional[str] = None
     # DDP 是否查找未使用的参数（用于调试）
     ddp_find_unused_parameters: bool = False
@@ -40,16 +47,23 @@ class DeviceConfig:
     ddp_timeout: int = 1800
     # 本地 rank（通常从环境变量获取，这里可以手动指定）
     local_rank: Optional[int] = None
+    # DeepSpeed 配置文件路径（当 parallel_strategy="deepspeed" 时使用）
+    deepspeed_config: Optional[str] = None
+    # FSDP 配置（当 parallel_strategy="fsdp" 时使用）
+    fsdp_config: Optional[dict] = None
 
     @classmethod
     def from_dict(cls, config: dict) -> "DeviceConfig":
         """从字典创建配置对象"""
         return cls(
             use_cuda=config.get("use_cuda", None),
+            parallel_strategy=config.get("parallel_strategy", None),
             ddp_backend=config.get("ddp_backend", None),
             ddp_find_unused_parameters=config.get("ddp_find_unused_parameters", False),
             ddp_timeout=config.get("ddp_timeout", 1800),
             local_rank=config.get("local_rank", None),
+            deepspeed_config=config.get("deepspeed_config", None),
+            fsdp_config=config.get("fsdp_config", None),
         )
 
     def to_dict(self) -> dict:
@@ -57,12 +71,18 @@ class DeviceConfig:
         result = {}
         if self.use_cuda is not None:
             result["use_cuda"] = self.use_cuda
+        if self.parallel_strategy is not None:
+            result["parallel_strategy"] = self.parallel_strategy
         if self.ddp_backend is not None:
             result["ddp_backend"] = self.ddp_backend
         result["ddp_find_unused_parameters"] = self.ddp_find_unused_parameters
         result["ddp_timeout"] = self.ddp_timeout
         if self.local_rank is not None:
             result["local_rank"] = self.local_rank
+        if self.deepspeed_config is not None:
+            result["deepspeed_config"] = self.deepspeed_config
+        if self.fsdp_config is not None:
+            result["fsdp_config"] = self.fsdp_config
         return result
 
 

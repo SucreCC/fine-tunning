@@ -151,10 +151,26 @@ class CustomTrainer(Trainer):
         # 检查是否使用 CUDA
         use_cuda = device_config.use_cuda if device_config.use_cuda is not None else torch.cuda.is_available()
         
-        # 处理分布式训练配置
-        # 如果设置了 ddp_backend，启用分布式训练
+        # 处理并行策略配置
+        parallel_strategy = device_config.parallel_strategy
         ddp_backend = device_config.ddp_backend
-        if ddp_backend and use_cuda:
+        local_rank = None
+        
+        # 如果设置了并行策略，自动设置相应的后端
+        if parallel_strategy == "ddp":
+            # DDP 策略：自动选择后端
+            if ddp_backend is None:
+                ddp_backend = "nccl" if use_cuda else "gloo"
+        elif parallel_strategy == "deepspeed":
+            # DeepSpeed 策略：需要 deepspeed 配置文件
+            if device_config.deepspeed_config is None:
+                logger.warning("使用 DeepSpeed 策略但未指定 deepspeed_config，将尝试自动查找")
+        elif parallel_strategy == "fsdp":
+            # FSDP 策略：使用 PyTorch FSDP
+            logger.info("使用 FSDP (Fully Sharded Data Parallel) 策略")
+        
+        # 处理分布式训练配置
+        if (ddp_backend or parallel_strategy == "ddp") and use_cuda:
             # 从环境变量获取 local_rank（如果存在）
             local_rank = device_config.local_rank
             if local_rank is None:
@@ -189,13 +205,40 @@ class CustomTrainer(Trainer):
         if not use_cuda:
             training_args_dict["use_cpu"] = True
         
-        # 添加分布式训练配置
-        if ddp_backend and use_cuda:
-            training_args_dict["ddp_backend"] = ddp_backend
+        # 添加并行策略配置
+        if parallel_strategy == "ddp":
+            # DDP 配置
+            if ddp_backend:
+                training_args_dict["ddp_backend"] = ddp_backend
             training_args_dict["ddp_find_unused_parameters"] = device_config.ddp_find_unused_parameters
             training_args_dict["ddp_timeout"] = device_config.ddp_timeout
-            if local_rank >= 0:
+            if local_rank is not None and local_rank >= 0:
                 training_args_dict["local_rank"] = local_rank
+        elif parallel_strategy == "deepspeed":
+            # DeepSpeed 配置
+            if device_config.deepspeed_config:
+                training_args_dict["deepspeed"] = device_config.deepspeed_config
+            else:
+                # 尝试从环境变量或默认路径查找
+                deepspeed_config_path = os.environ.get("DEEPSPEED_CONFIG_FILE", "deepspeed_config.json")
+                if os.path.exists(deepspeed_config_path):
+                    training_args_dict["deepspeed"] = deepspeed_config_path
+                    logger.info(f"使用 DeepSpeed 配置文件: {deepspeed_config_path}")
+                else:
+                    logger.warning("未找到 DeepSpeed 配置文件，将使用默认配置")
+        elif parallel_strategy == "fsdp":
+            # FSDP 配置
+            if device_config.fsdp_config:
+                training_args_dict["fsdp"] = device_config.fsdp_config
+            else:
+                # 默认 FSDP 配置
+                training_args_dict["fsdp"] = {
+                    "fsdp_transformer_layer_cls_to_wrap": None,  # 自动检测
+                    "fsdp_backward_prefetch": "BACKWARD_PRE",
+                    "fsdp_forward_prefetch": False,
+                    "fsdp_use_orig_params": True,
+                }
+                logger.info("使用默认 FSDP 配置")
         
         # 如果模型已经在多个设备上，设置 dataloader_pin_memory=False
         # 这样可以避免 Trainer 尝试移动模型到单个设备
