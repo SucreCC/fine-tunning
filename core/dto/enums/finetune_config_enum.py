@@ -40,15 +40,15 @@ class FinetuneStrategyEnum(Enum):
     def get_finetune_class_by_type(
         cls,
         finetune_type: str,
-    ) -> types.ModuleType:
+    ) -> Type[BaseFinetuneConfig]:
         """
-        根据 finetune_type 动态导入并返回对应的配置模块
+        根据 finetune_type 动态导入并返回对应的配置类
         
         Args:
             finetune_type: 微调类型名称（如 "lora", "p_tuning", "prefix_tuning", "ia3"）
             
         Returns:
-            导入的模块对象，可以通过模块获取配置类（如 module.LoRAConfig）
+            配置类（如 LoRAConfig, PTuningConfig）
             
         Raises:
             ValueError: 如果类型不存在或不支持
@@ -56,8 +56,7 @@ class FinetuneStrategyEnum(Enum):
             AttributeError: 如果模块中不存在对应的配置类
             
         Example:
-            >>> module = FinetuneStrategyEnum.get_module_path_by_type("lora")
-            >>> config_class = getattr(module, "LoRAConfig")
+            >>> config_class = FinetuneStrategyEnum.get_finetune_class_by_type("lora")
             >>> config = config_class.from_dict({"r": 8, "lora_alpha": 32})
         """
         finetune_type = finetune_type.lower()
@@ -83,15 +82,31 @@ class FinetuneStrategyEnum(Enum):
                 # 构建完整的模块路径
                 module_path = f"core.dto.config.finetune_config.interface.iml.{module_name}"
                 
+                # 根据 finetune_type 生成配置类名
+                class_name = cls._get_config_class_name(finetune_type)
+                
                 try:
                     # 动态导入模块
                     module = importlib.import_module(module_path)
-                    return module
+                    
+                    # 检查模块中是否存在配置类
+                    if not hasattr(module, class_name):
+                        raise AttributeError(
+                            f"模块 {module_path} 中找不到配置类 {class_name}。"
+                            f"请确保模块中存在对应的配置类"
+                        )
+                    
+                    # 获取配置类
+                    config_class = getattr(module, class_name)
+                    return config_class
+                    
                 except ModuleNotFoundError as e:
                     raise ModuleNotFoundError(
                         f"无法找到配置模块: {module_path}。"
                         f"请确保模块文件存在于 core.dto.config.finetune_config.interface.iml 目录中"
                     ) from e
+                except AttributeError:
+                    raise  # 重新抛出 AttributeError
                 except Exception as e:
                     raise RuntimeError(
                         f"导入模块 {module_path} 时发生错误: {str(e)}"
@@ -103,6 +118,39 @@ class FinetuneStrategyEnum(Enum):
             f"未知的微调策略: {finetune_type}。"
             f"支持的策略: {available_strategies}"
         )
+    
+    @staticmethod
+    def _get_config_class_name(finetune_type: str) -> str:
+        """
+        根据 finetune_type 生成配置类名
+        
+        Args:
+            finetune_type: 微调类型（如 "lora", "p_tuning"）
+            
+        Returns:
+            配置类名（如 "LoRAConfig", "PTuningConfig"）
+        """
+        # 特殊映射
+        type_to_class_name = {
+            "lora": "LoRAConfig",
+            "qlora": "LoRAConfig",  # QLoRA 也使用 LoRAConfig
+            "p_tuning": "PTuningConfig",
+            "ptuning": "PTuningConfig",  # 别名
+            "prefix_tuning": "PrefixTuningConfig",
+            "ia3": "IA3Config",
+            "adalora": "AdaLoRAConfig",
+        }
+        
+        # 如果存在特殊映射，直接返回
+        if finetune_type in type_to_class_name:
+            return type_to_class_name[finetune_type]
+        
+        # 否则将下划线分隔的名称转换为 PascalCase
+        parts = finetune_type.split("_")
+        # 每个部分首字母大写
+        pascal_case = "".join(word.capitalize() for word in parts)
+        # 添加 Config 后缀
+        return f"{pascal_case}Config"
 
     @classmethod
     def from_type(cls, finetune_type: str) -> "FinetuneStrategyEnum":
