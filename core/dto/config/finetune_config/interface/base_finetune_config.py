@@ -13,7 +13,7 @@ from core.dto.enums import FinetuneStrategyEnum
 class BaseFinetuneConfig(ABC):
     """微调配置基类"""
     type: FinetuneStrategyEnum
-    stage: str = "finetune"
+    stage: str = FinetuneStrategyEnum
     
     @classmethod
     @abstractmethod
