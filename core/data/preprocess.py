@@ -25,7 +25,7 @@ def preprocess_text(text: str, max_length: Optional[int] = None) -> str:
     return text
 
 
-def format_conversation(item: Dict, system_template: str = "你是一个名为沐雪的可爱AI女孩子", model_type: Optional[str] = None) -> str:
+def format_conversation(item: Dict, system_template: str = "", model_type: Optional[str] = None) -> str:
     """
     格式化对话为模型输入格式
     
@@ -59,7 +59,7 @@ def format_conversation(item: Dict, system_template: str = "你是一个名为�
         return formatted_text.strip()
 
 
-def format_chatglm_conversation(item: Dict, system_template: str = "你是一个名为沐雪的可爱AI女孩子") -> str:
+def format_chatglm_conversation(item: Dict, system_template: str = "") -> str:
     """
     格式化 ChatGLM 格式的对话
     
@@ -87,7 +87,7 @@ def format_chatglm_conversation(item: Dict, system_template: str = "你是一个
     return formatted_text.strip()
 
 
-def format_qwen_conversation(item: Dict, system_template: str = "你是一个名为沐雪的可爱AI女孩子") -> str:
+def format_qwen_conversation(item: Dict, system_template: str = "") -> str:
     """
     格式化 Qwen 格式的对话
     
