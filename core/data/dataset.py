@@ -7,7 +7,9 @@ import random
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, DataCollatorForLanguageModeling
+from core.utils import logging
 
+logger = logging.get_logger(__name__)
 
 class ConversationDataset(Dataset):
     """对话数据集类"""
@@ -17,7 +19,7 @@ class ConversationDataset(Dataset):
         data_path: str,
         tokenizer: PreTrainedTokenizer,
         max_length: int = 2048,
-        system_template: str = "你是一个名为沐雪的可爱AI女孩子",
+        system_template: str = "",
         train_ratio: float = 1.0,
         seed: Optional[int] = None
     ):
@@ -60,7 +62,7 @@ class ConversationDataset(Dataset):
                         item = json.loads(line)
                         data.append(item)
                     except json.JSONDecodeError as e:
-                        print(f"解析 JSON 失败: {line[:100]}... 错误: {e}")
+                        logger.info(f"解析 JSON 失败: {line[:100]}... 错误: {e}")
                         continue
         
         # 根据 train_ratio 选择子集
@@ -78,7 +80,7 @@ class ConversationDataset(Dataset):
             selected_indices = sorted(indices[:subset_size])  # 排序以保持原始顺序
             
             data = [data[i] for i in selected_indices]
-            print(
+            logger.info(
                 f"使用数据集的 {self.train_ratio*100:.1f}%: "
                 f"从 {total_size} 条数据中选择 {subset_size} 条"
             )
