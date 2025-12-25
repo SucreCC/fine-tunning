@@ -21,6 +21,8 @@ class DatasetConfig:
 
     # 系统提示词，如果在训练集中没有加就会用这个
     system_prompt: str = ""
+    # 数据处理器模块名（default_processor, chatglm_processor, qwen_processor）
+    processor: Optional[str] = ""
 
     @classmethod
     def from_dict(cls, config: dict) -> "DatasetConfig":
@@ -32,6 +34,7 @@ class DatasetConfig:
             streaming=config.get("streaming", False),
             train_ratio=config.get("train_ratio", 1.0),
             system_prompt=config.get("system_prompt", ""),
+            processor=config.get("processor", "default_processor"),
         )
 
     def to_dict(self) -> dict:
@@ -43,5 +46,6 @@ class DatasetConfig:
             "streaming": self.streaming,
             "train_ratio": self.train_ratio,
             "system_prompt": self.system_prompt,
+            "processor": self.processor,
         }
 

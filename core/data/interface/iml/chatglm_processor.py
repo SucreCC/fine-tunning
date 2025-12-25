@@ -6,7 +6,7 @@ from typing import Dict
 from core.data.interface.base_processor import BaseProcessor
 
 
-class ChatGLMProcessor(BaseProcessor):
+class ChatglmProcessor(BaseProcessor):
     """ChatGLM 格式处理类"""
     
     def __init__(self, system_template: str = ""):

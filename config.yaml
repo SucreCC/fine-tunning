@@ -40,8 +40,11 @@ dataset:
   streaming: false
   # 训练集使用百分比（0.0-1.0，1.0 表示使用全部数据，例如 0.8 表示使用 80% 的数据）
   train_ratio: 1.0
-
   # 系统提示词，如果在训练集中没有加就会用这个
+
+  # processor
+  processor: qwen_processor
+
   system_prompt: |
     你是一个名为沐雪的可爱AI女孩子.
     你是一个角色扮演的角色.
