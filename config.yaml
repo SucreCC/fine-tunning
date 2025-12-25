@@ -148,8 +148,8 @@ training:
 # WandB 配置
 # ========================
 wandb:
-  use_wandb: false
-  wandb_api_key: null
+  use_wandb: true
+  wandb_api_key: "f49fecc68453c53efcf05f3eef1ed2baddb92036"
   wandb_project: "mu_xue_finetuning"
   wandb_run_name: null
   wandb_entity: null
