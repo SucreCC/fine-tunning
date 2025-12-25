@@ -5,6 +5,7 @@
 支持控制台和文件输出，可配置日志级别和格式。
 """
 import logging
+import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
@@ -16,17 +17,27 @@ def setup_logging(config: LogConfig) -> None:
     配置日志系统
 
     设置根日志记录器，配置控制台和文件处理器。
+    
+    Args:
+        config: 日志配置对象
     """
+    
+    # 保证日志目录的存在
+    os.makedirs(config.log_dir, exist_ok=True)
+    
+    # 将字符串日志级别转换为 logging 级别
+    log_level = getattr(logging, config.log_level.upper(), logging.INFO)
+    
     # 获取根日志记录器
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG if config.log_level else logging.INFO)
+    root_logger.setLevel(log_level)
 
     # 清除已有的处理器
     root_logger.handlers.clear()
 
     # 控制台处理器
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG if config.log_level else logging.INFO)
+    console_handler.setLevel(log_level)
     console_formatter = logging.Formatter(config.log_format, config.date_format)
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)
