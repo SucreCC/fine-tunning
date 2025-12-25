@@ -7,6 +7,7 @@ from logging import Logger
 from transformers import PreTrainedTokenizer
 
 from core.config.config_manager import ConfigManager
+from core.config.customer_lora_config import CustomerLoRAConfig
 from core.config.dataset_config import DatasetConfig
 from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
@@ -16,6 +17,7 @@ from core.utils import logging
 from core.utils.file_utils import find_project_root
 from core.utils.logging import setup_logging
 from core.utils.seed import set_seed
+from transformers import PreTrainedModel
 
 PROJECT_ROOT = find_project_root()
 
@@ -36,6 +38,36 @@ def init_output_dir(model_config: ModelConfig):
     output_dir = PROJECT_ROOT / model_config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
+
+
+def init_model(
+    model_config: ModelConfig,
+    lora_config: CustomerLoRAConfig,
+    logger: Logger
+) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
+    """
+    初始化模型和分词器，并设置 LoRA（如果启用）
+    
+    Args:
+        model_config: 模型配置
+        lora_config: LoRA 配置
+        logger: 日志记录器
+        
+    Returns:
+        (model, tokenizer) 元组
+    """
+    # 加载模型和分词器
+    model, tokenizer = load_model_and_tokenizer(model_config)
+    logger.info(f"加载模型和分词器成功: {model_config.base_model_path}")
+
+    # 设置 LoRA（如果启用）
+    model = setup_lora(model, lora_config, model_config)
+    if lora_config.use_lora:
+        logger.info("LoRA 设置成功")
+    else:
+        logger.info("未启用 LoRA，使用全量模型训练")
+    
+    return model, tokenizer
 
 
 def init_dataset(
@@ -83,15 +115,16 @@ def main():
     set_seed(config_manager.training_config.seed)
     logger.info(f"随机种子: {config_manager.training_config.seed}")
 
+    # 创建输出目录
     output_dir = init_output_dir(config_manager.model_config)
     logger.info(f"模型输出目录: {output_dir}")
 
-    model, tokenizer = load_model_and_tokenizer(config_manager.model_config)
-    logger.info(f"加载模型 和 tokenizer 成功: {config_manager.model_config.base_model_path}")
-
-    # 设置 LoRA（如果启用）
-    model = setup_lora(model, config_manager.customer_lora_config, config_manager.model_config)
-    logger.info("设置 LoRA 成功")
+    # 初始化模型和分词器
+    model, tokenizer = init_model(
+        model_config=config_manager.model_config,
+        lora_config=config_manager.customer_lora_config,
+        logger=logger
+    )
 
     # 初始化训练数据集
     train_dataset = init_dataset(
