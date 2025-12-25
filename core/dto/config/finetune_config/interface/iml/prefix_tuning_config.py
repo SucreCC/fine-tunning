@@ -25,6 +25,8 @@ class PrefixTuningConfig(BaseFinetuneConfig):
     def from_dict(cls, config: dict) -> "PrefixTuningConfig":
         """从字典创建配置对象"""
         return cls(
+            type=config.get("type", "prefix_tuning"),  # 从 BaseFinetuneConfig 继承的字段
+            stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
             enable=config.get("enable", True),
             num_virtual_tokens=config.get("num_virtual_tokens", 20),
             encoder_hidden_size=config.get("encoder_hidden_size", None),

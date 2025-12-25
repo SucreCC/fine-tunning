@@ -36,6 +36,8 @@ class IA3Config(BaseFinetuneConfig):
         feedforward_modules = config.get("feedforward_modules", [])
         
         return cls(
+            type=config.get("type", "ia3"),  # 从 BaseFinetuneConfig 继承的字段
+            stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
             enable=config.get("enable", True),
             target_modules=target_modules if isinstance(target_modules, list) else list(target_modules),
             feedforward_modules=feedforward_modules if isinstance(feedforward_modules, list) else list(feedforward_modules),

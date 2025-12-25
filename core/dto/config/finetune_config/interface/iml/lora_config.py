@@ -58,6 +58,8 @@ class LoRAConfig(BaseFinetuneConfig):
         )
         
         return cls(
+            type=config.get("type", "lora"),  # 从 BaseFinetuneConfig 继承的字段
+            stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
             enable=config.get("enable", True),
             r=config.get("r", 8),
             lora_alpha=config.get("lora_alpha", 32),

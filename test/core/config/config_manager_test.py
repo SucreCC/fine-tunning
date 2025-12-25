@@ -1,4 +1,4 @@
-from core.config.config_manager import ConfigManager
+from core.dto.config.config_manager import ConfigManager
 
 if __name__ == "__main__":
     config_manager = ConfigManager.from_yaml()
