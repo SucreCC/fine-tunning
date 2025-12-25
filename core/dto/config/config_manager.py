@@ -6,14 +6,14 @@ from dataclasses import dataclass
 from typing import Optional
 import yaml
 from .dataset_config import DatasetConfig
+from .finetune_config.interface.iml.finetune_config import FinetuneConfig
 from .log_config import LogConfig
 from .custom_lora_config import CustomLoRAConfig
 from .model_config import ModelConfig
 from .service_config import ServiceConfig
 from .training_config import TrainingConfig
 from .wandb_config import WandbConfig
-from .finetune_config import FinetuneConfig
-from ..utils.file_utils import find_project_root
+from ...utils.file_utils import find_project_root
 
 
 @dataclass
@@ -31,15 +31,30 @@ class ConfigManager:
     @classmethod
     def from_dict(cls, config: dict) -> "ConfigManager":
         """从字典创建配置管理器"""
+        finetune_config = FinetuneConfig.from_dict(config.get("finetune", {}))
+        
+        # 为了向后兼容，如果顶层有 lora 配置，优先使用顶层的
+        # 否则从 finetune_config.strategy_config 获取（如果是 lora/qlora）
+        lora_config_dict = config.get("lora", {})
+        if not lora_config_dict and finetune_config.strategy_config:
+            # 如果 finetune_config.strategy_config 是 CustomLoRAConfig，使用它
+            from .custom_lora_config import CustomLoRAConfig
+            if isinstance(finetune_config.strategy_config, CustomLoRAConfig):
+                custom_lora_config = finetune_config.strategy_config
+            else:
+                custom_lora_config = CustomLoRAConfig.from_dict({})
+        else:
+            custom_lora_config = CustomLoRAConfig.from_dict(lora_config_dict)
+        
         return cls(
             service_config=ServiceConfig.from_dict(config.get("service", {})),
             log_config=LogConfig.from_dict(config.get("log", {})),
             model_config=ModelConfig.from_dict(config.get("model", {})),
             dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
             training_config=TrainingConfig.from_dict(config.get("training", {})),
-            custom_lora_config=CustomLoRAConfig.from_dict(config.get("lora", {})),
+            custom_lora_config=custom_lora_config,
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
-            finetune_config=FinetuneConfig.from_dict(config.get("finetune", {})),
+            finetune_config=finetune_config,
         )
 
     def to_dict(self) -> dict:

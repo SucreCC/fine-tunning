@@ -1,35 +1,41 @@
 """
-LoRA 配置类
+AdaLoRA 配置类
+AdaLoRA 是 LoRA 的改进版本，可以自适应调整 rank
 """
 from dataclasses import dataclass
 from typing import List, Optional, Literal, cast, Dict, Any
-from .finetune_config.base_finetune_config import BaseFinetuneConfig
+
+from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
 
 
 @dataclass
-class CustomLoRAConfig(BaseFinetuneConfig):
-    """LoRA 配置"""
-    # 是否启用 LoRA（冗余但清晰）
+class AdaLoRAConfig(BaseFinetuneConfig):
+    """AdaLoRA 配置"""
+    # 是否启用 AdaLoRA
     enable: bool = True
-    # 是否使用 LoRA（向后兼容）
-    use_lora: bool = True
-    # LoRA rank
+    # 初始 rank
     r: int = 8
     # LoRA alpha
     lora_alpha: int = 32
-    # LoRA target modules（根据模型类型调整）
+    # 目标模块
     target_modules: Optional[List[str]] = None
     # LoRA dropout
     lora_dropout: float = 0.1
-    # LoRA bias 类型（关键修改点）
+    # 初始化范围（用于权重初始化）
+    init_r: int = 12
+    # 目标 rank（最终要达到的 rank）
+    target_r: int = 8
+    # beta1（用于优化器）
+    beta1: float = 0.85
+    # beta2（用于优化器）
+    beta2: float = 0.85
+    # 任务类型
+    task_type: str = "CAUSAL_LM"
+    # bias 类型
     bias: Literal["none", "all", "lora_only"] = "none"
     
     def __post_init__(self):
         """初始化默认值"""
-        # 确保 enable 和 use_lora 同步
-        self.use_lora = self.enable
-        
-        # 初始化 target_modules 默认值
         if self.target_modules is None:
             self.target_modules = [
                 "query_key_value",
@@ -37,44 +43,47 @@ class CustomLoRAConfig(BaseFinetuneConfig):
                 "dense_h_to_4h",
                 "dense_4h_to_h",
             ]
-
+    
     @classmethod
-    def from_dict(cls, config: dict) -> "CustomLoRAConfig":
+    def from_dict(cls, config: dict) -> "AdaLoRAConfig":
+        """从字典创建配置对象"""
         target_modules = config.get(
             "target_modules",
             ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"],
         )
-
+        
         bias = cast(
             Literal["none", "all", "lora_only"],
             config.get("bias", "none"),
         )
-
-        enable = config.get("enable", config.get("use_lora", True))
-        use_lora = config.get("use_lora", enable)
         
-        instance = cls(
-            enable=enable,
-            use_lora=use_lora,
+        return cls(
+            enable=config.get("enable", True),
             r=config.get("r", 8),
             lora_alpha=config.get("lora_alpha", 32),
             target_modules=target_modules if isinstance(target_modules, list) else list(target_modules),
             lora_dropout=config.get("lora_dropout", 0.1),
+            init_r=config.get("init_r", 12),
+            target_r=config.get("target_r", 8),
+            beta1=config.get("beta1", 0.85),
+            beta2=config.get("beta2", 0.85),
+            task_type=config.get("task_type", "CAUSAL_LM"),
             bias=bias,
         )
-        # 确保 enable 和 use_lora 同步
-        instance.enable = enable
-        instance.use_lora = use_lora
-        return instance
-
+    
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
             "enable": self.enable,
-            "use_lora": self.use_lora,
             "r": self.r,
             "lora_alpha": self.lora_alpha,
             "target_modules": self.target_modules,
             "lora_dropout": self.lora_dropout,
+            "init_r": self.init_r,
+            "target_r": self.target_r,
+            "beta1": self.beta1,
+            "beta2": self.beta2,
+            "task_type": self.task_type,
             "bias": self.bias,
         }
+
