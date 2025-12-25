@@ -9,7 +9,7 @@ class LogConfig:
     date_format: str = "%Y-%m-%d %H:%M:%S"
     log_dir: str = "./logs"
     log_file: str = ""
-    error_file: str = "aiabo.error"
+    error_file: str = ""
     log_level: str = "INFO"
     uvicorn_log_level: str = "INFO"
     uvicorn_access_log_level: str = "WARNING"
