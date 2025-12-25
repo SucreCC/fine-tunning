@@ -5,11 +5,14 @@ logging / generation callback
 from transformers import TrainerCallback, TrainerState, TrainerControl
 from typing import Optional
 
+from core.utils import logging
+
 try:
     import wandb
 except ImportError:
     wandb = None
 
+logger = logging.get_logger(__name__)
 
 class GenerationCallback(TrainerCallback):
     """生成回调，用于在训练过程中生成示例文本"""
@@ -40,8 +43,8 @@ class GenerationCallback(TrainerCallback):
                 outputs = model.generate(**inputs, **self.generation_config)
                 generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                 
-                print(f"\n[Step {state.global_step}] Prompt: {prompt}")
-                print(f"Generated: {generated_text}\n")
+                logger.info(f"\n[Step {state.global_step}] Prompt: {prompt}")
+                logger.info(f"Generated: {generated_text}\n")
                 
                 # 如果使用 wandb，记录生成结果
                 if wandb and wandb.run is not None:
@@ -79,7 +82,7 @@ class WandbCallback(TrainerCallback):
                     dir=self.wandb_config.wandb_dir,
                 )
             except ImportError:
-                print("警告: wandb 未安装，跳过 wandb 初始化")
+                logger.info("警告: wandb 未安装，跳过 wandb 初始化")
     
     def on_train_end(self, args, state: TrainerState, control: TrainerControl, **kwargs):
         """训练结束时结束 wandb"""
