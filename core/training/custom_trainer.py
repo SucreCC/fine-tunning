@@ -143,6 +143,23 @@ class CustomTrainer(Trainer):
             elif hasattr(model, 'device_map') and model.device_map:
                 model_on_multiple_devices = True
         
+        # 处理设备配置
+        device_config = training_config.device
+        import os
+        import torch
+        
+        # 检查是否使用 CUDA
+        use_cuda = device_config.use_cuda if device_config.use_cuda is not None else torch.cuda.is_available()
+        
+        # 处理分布式训练配置
+        # 如果设置了 ddp_backend，启用分布式训练
+        ddp_backend = device_config.ddp_backend
+        if ddp_backend and use_cuda:
+            # 从环境变量获取 local_rank（如果存在）
+            local_rank = device_config.local_rank
+            if local_rank is None:
+                local_rank = int(os.environ.get("LOCAL_RANK", -1))
+        
         # 构建 TrainingArguments 参数字典
         training_args_dict = {
             "output_dir": model_config.output_dir,
@@ -166,6 +183,19 @@ class CustomTrainer(Trainer):
             "report_to": report_to,
             "run_name": run_name,
         }
+        
+        # 添加设备相关配置
+        # 使用 use_cpu 代替已弃用的 no_cuda
+        if not use_cuda:
+            training_args_dict["use_cpu"] = True
+        
+        # 添加分布式训练配置
+        if ddp_backend and use_cuda:
+            training_args_dict["ddp_backend"] = ddp_backend
+            training_args_dict["ddp_find_unused_parameters"] = device_config.ddp_find_unused_parameters
+            training_args_dict["ddp_timeout"] = device_config.ddp_timeout
+            if local_rank >= 0:
+                training_args_dict["local_rank"] = local_rank
         
         # 如果模型已经在多个设备上，设置 dataloader_pin_memory=False
         # 这样可以避免 Trainer 尝试移动模型到单个设备

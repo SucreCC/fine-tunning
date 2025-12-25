@@ -28,6 +28,45 @@ class PrecisionConfig:
 
 
 @dataclass
+class DeviceConfig:
+    """设备配置"""
+    # 是否使用 CUDA（None 表示自动检测）
+    use_cuda: Optional[bool] = None
+    # 分布式训练后端（"nccl" 用于多 GPU，"gloo" 用于 CPU，None 表示不使用分布式）
+    ddp_backend: Optional[str] = None
+    # DDP 是否查找未使用的参数（用于调试）
+    ddp_find_unused_parameters: bool = False
+    # DDP 超时时间（秒）
+    ddp_timeout: int = 1800
+    # 本地 rank（通常从环境变量获取，这里可以手动指定）
+    local_rank: Optional[int] = None
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "DeviceConfig":
+        """从字典创建配置对象"""
+        return cls(
+            use_cuda=config.get("use_cuda", None),
+            ddp_backend=config.get("ddp_backend", None),
+            ddp_find_unused_parameters=config.get("ddp_find_unused_parameters", False),
+            ddp_timeout=config.get("ddp_timeout", 1800),
+            local_rank=config.get("local_rank", None),
+        )
+
+    def to_dict(self) -> dict:
+        """转换为字典"""
+        result = {}
+        if self.use_cuda is not None:
+            result["use_cuda"] = self.use_cuda
+        if self.ddp_backend is not None:
+            result["ddp_backend"] = self.ddp_backend
+        result["ddp_find_unused_parameters"] = self.ddp_find_unused_parameters
+        result["ddp_timeout"] = self.ddp_timeout
+        if self.local_rank is not None:
+            result["local_rank"] = self.local_rank
+        return result
+
+
+@dataclass
 class TrainingConfig:
     """训练配置"""
     # 训练轮数
@@ -62,6 +101,8 @@ class TrainingConfig:
     fp16: bool = True
     # 向后兼容：是否使用 bf16（需要 A100 等支持）
     bf16: bool = False
+    # 设备配置
+    device: Optional[DeviceConfig] = None
 
     def __post_init__(self):
         """初始化默认值"""
@@ -71,6 +112,9 @@ class TrainingConfig:
         if self.precision:
             self.fp16 = self.precision.fp16
             self.bf16 = self.precision.bf16
+        # 初始化设备配置
+        if self.device is None:
+            self.device = DeviceConfig()
 
     @classmethod
     def from_dict(cls, config: dict) -> "TrainingConfig":
@@ -86,6 +130,13 @@ class TrainingConfig:
             fp16 = config.get("fp16", True)
             bf16 = config.get("bf16", False)
             precision = PrecisionConfig(fp16=fp16, bf16=bf16)
+        
+        # 处理 device 配置
+        device_config = config.get("device", {})
+        if isinstance(device_config, dict) and device_config:
+            device = DeviceConfig.from_dict(device_config)
+        else:
+            device = DeviceConfig()
         
         instance = cls(
             num_epochs=config.get("num_epochs", 3),
@@ -104,6 +155,7 @@ class TrainingConfig:
             precision=precision,
             fp16=fp16,
             bf16=bf16,
+            device=device,
         )
         return instance
 
@@ -124,4 +176,5 @@ class TrainingConfig:
             "max_grad_norm": self.max_grad_norm,
             "save_total_limit": self.save_total_limit,
             "precision": self.precision.to_dict() if self.precision else PrecisionConfig().to_dict(),
+            "device": self.device.to_dict() if self.device else DeviceConfig().to_dict(),
         }
