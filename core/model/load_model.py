@@ -8,7 +8,7 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     PreTrainedModel,
-    PreTrainedTokenizerBase,
+    PreTrainedTokenizer,
 )
 from core.config.model_config import ModelConfig
 from core.utils import logging
@@ -18,7 +18,7 @@ logger = logging.get_logger(__name__)
 
 def load_model_and_tokenizer(
     model_config: ModelConfig,
-) -> Tuple[PreTrainedModel, PreTrainedTokenizerBase]:
+) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
     """
     加载模型和分词器
 
