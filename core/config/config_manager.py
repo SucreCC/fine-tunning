@@ -7,7 +7,7 @@ from typing import Optional
 import yaml
 from .dataset_config import DatasetConfig
 from .log_config import LogConfig
-from .lora_config import LoRAConfig
+from .customer_lora_config import CustomerLoRAConfig
 from .model_config import ModelConfig
 from .service_config import ServiceConfig
 from .training_config import TrainingConfig
@@ -23,7 +23,7 @@ class ConfigManager:
     model_config: Optional[ModelConfig] = None,
     dataset_config: Optional[DatasetConfig] = None,
     training_config: Optional[TrainingConfig] = None,
-    lora_config: Optional[LoRAConfig] = None,
+    customer_lora_config: Optional[CustomerLoRAConfig] = None,
     wandb_config: Optional[WandbConfig] = None,
 
     @classmethod
@@ -35,7 +35,7 @@ class ConfigManager:
             model_config=ModelConfig.from_dict(config.get("model", {})),
             dataset_config=DatasetConfig.from_dict(config.get("dataset", {})),
             training_config=TrainingConfig.from_dict(config.get("training", {})),
-            lora_config=LoRAConfig.from_dict(config.get("lora", {})),
+            customer_lora_config=CustomerLoRAConfig.from_dict(config.get("lora", {})),
             wandb_config=WandbConfig.from_dict(config.get("wandb", {})),
         )
 
@@ -47,7 +47,7 @@ class ConfigManager:
             "model": self.model_config.to_dict(),
             "dataset": self.dataset_config.to_dict(),
             "training": self.training_config.to_dict(),
-            "lora": self.lora_config.to_dict(),
+            "lora": self.customer_lora_config.to_dict(),
             "wandb": self.wandb_config.to_dict(),
         }
 
@@ -86,7 +86,7 @@ class ConfigManager:
             f"  model_config={self.model_config},\n"
             f"  dataset_config={self.dataset_config},\n"
             f"  training_config={self.training_config},\n"
-            f"  lora_config={self.lora_config},\n"
+            f"  customer_lora_config={self.customer_lora_config},\n"
             f"  wandb_config={self.wandb_config}\n"
             f")"
         )

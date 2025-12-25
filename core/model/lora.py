@@ -5,14 +5,16 @@ from peft import (
     LoraConfig,
     get_peft_model,
     prepare_model_for_kbit_training,
-    TaskType
+    TaskType, PeftModel, PeftMixedModel
 )
 from transformers import PreTrainedModel
+from core.config.customer_lora_config import CustomerLoRAConfig
+from core.config.model_config import ModelConfig
+from core.utils import logging
 
-from core.config.config_manager import ConfigManager
+logger = logging.get_logger(__name__)
 
-
-def setup_lora(model: PreTrainedModel, config: ConfigManager) -> PreTrainedModel:
+def setup_lora(model: PreTrainedModel, lora_config: CustomerLoRAConfig, model_config: ModelConfig) -> PreTrainedModel | PeftModel | PeftMixedModel:
     """
     设置 LoRA
     
@@ -23,15 +25,15 @@ def setup_lora(model: PreTrainedModel, config: ConfigManager) -> PreTrainedModel
     Returns:
         应用了 LoRA 的模型
     """
-    lora_config = config.lora_config
+
     
     if not lora_config.use_lora:
         return model
     
-    print("配置 LoRA...")
+    logger.info("配置 LoRA...")
     
     # 如果使用量化，准备模型用于训练
-    if config.model_config.use_4bit or config.model_config.use_8bit:
+    if model_config.use_4bit or model_config.use_8bit:
         model = prepare_model_for_kbit_training(model)
     
     # 确定任务类型
