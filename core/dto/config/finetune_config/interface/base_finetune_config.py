@@ -6,10 +6,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, Any
 
+from core.dto.enums import FinetuneStrategyEnum
+
 
 @dataclass
 class BaseFinetuneConfig(ABC):
     """微调配置基类"""
+    type: FinetuneStrategyEnum
     
     @classmethod
     @abstractmethod
