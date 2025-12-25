@@ -1,8 +1,7 @@
 """
 模型模块
 """
-from .load_model import load_model_and_tokenizer
-from .lora import setup_lora
+from .custom_model import CustomModel, load_model_and_tokenizer
 
-__all__ = ["load_model_and_tokenizer", "setup_lora"]
+__all__ = ["CustomModel", "load_model_and_tokenizer"]
 
