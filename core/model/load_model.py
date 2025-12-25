@@ -4,11 +4,16 @@
 """
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from bitsandbytes import BitsAndBytesConfig
-from typing import Tuple, Optional, Any
+from typing import Tuple, Optional, Any, TYPE_CHECKING
 from transformers.models.auto.modeling_auto import _BaseModelWithGenerate
 from core.config.model_config import ModelConfig
 from core.utils import logging
+
+try:
+    from bitsandbytes import BitsAndBytesConfig
+except ImportError:
+    # 如果未安装 bitsandbytes，设置为 None
+    BitsAndBytesConfig = None  # type: ignore
 
 logger = logging.get_logger(__name__)
 

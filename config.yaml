@@ -20,7 +20,7 @@ log:
 # 模型配置
 model:
   # 基础模型路径（可以是 HuggingFace 模型名称或本地路径）
-  base_model_path: "THUDM/chatglm3-6b"
+  base_model_path: "./model/Qwen2.5-7B-Instruct"
   # 输出模型保存路径
   output_dir: "./outputs/checkpoints"
   # 是否使用 8bit 量化（节省显存）
