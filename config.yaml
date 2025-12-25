@@ -128,8 +128,14 @@ training:
     ddp_find_unused_parameters: false
     # DDP 超时时间（秒）
     ddp_timeout: 1800
-    # 本地 rank（通常从环境变量 LOCAL_RANK 获取，这里可以手动指定）
+    # 本地 rank（分布式训练中当前进程使用的本地 GPU 编号，如 0, 1, 2...）
+    # 通常不需要手动设置，会自动从环境变量 LOCAL_RANK 获取（由 torchrun 自动设置）
+    # 只有在特殊情况下才需要手动指定
     local_rank: null
+    # 指定使用哪些 GPU（例如："0,1" 表示使用 GPU 0 和 1，"0" 表示只使用 GPU 0）
+    # 通过设置 CUDA_VISIBLE_DEVICES 环境变量实现
+    # 示例：CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 train.py
+    # 注意：这里只是说明，实际使用时通过环境变量设置，不在这里配置
     # DeepSpeed 配置文件路径（当 parallel_strategy="deepspeed" 时使用）
     # 可以是相对路径或绝对路径，也可以从环境变量 DEEPSPEED_CONFIG_FILE 获取
     deepspeed_config: null
