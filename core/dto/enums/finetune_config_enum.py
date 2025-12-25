@@ -35,7 +35,7 @@ class FinetuneStrategyEnum(Enum):
     # ---------- 你原有的方法，保持不变 ----------
 
     @classmethod
-    def get_config_class_by_type(
+    def get_module_path_by_type(
         cls,
         finetune_type: str,
     ) -> str:
