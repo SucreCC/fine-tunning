@@ -10,8 +10,6 @@ from core.dto.config.finetune_config.interface.base_finetuning_config import Bas
 @dataclass
 class IA3Config(BaseFinetuningConfig):
     """IA3 配置"""
-    # 是否启用 IA3
-    enable: bool = True
     # 目标模块（通常只包含 attention 和 feed-forward 层）
     target_modules: Optional[List[str]] = None
     # feed-forward 模块（用于指定哪些模块应用 IA3）
@@ -38,7 +36,6 @@ class IA3Config(BaseFinetuningConfig):
         return cls(
             type=config.get("type", "ia3"),  # 从 BaseFinetuneConfig 继承的字段
             stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
-            enable=config.get("enable", True),
             target_modules=target_modules if isinstance(target_modules, list) else list(target_modules),
             feedforward_modules=feedforward_modules if isinstance(feedforward_modules, list) else list(feedforward_modules),
             task_type=config.get("task_type", "CAUSAL_LM"),
@@ -47,7 +44,6 @@ class IA3Config(BaseFinetuningConfig):
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
-            "enable": self.enable,
             "target_modules": self.target_modules,
             "feedforward_modules": self.feedforward_modules,
             "task_type": self.task_type,

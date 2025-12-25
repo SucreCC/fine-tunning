@@ -47,11 +47,6 @@ class CustomLoRA(BaseCustomFinetuning):
         
         lora_config: LoRAConfig = finetune_config
         
-        # 如果未启用，直接返回模型
-        if not lora_config.enable:
-            logger.info("LoRA 未启用，使用全量模型训练")
-            return model
-        
         logger.info("配置 LoRA...")
         
         # 如果使用量化，准备模型用于训练

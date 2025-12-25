@@ -47,11 +47,6 @@ class CustomPrefixTuning(BaseCustomFinetuning):
         
         prefix_tuning_config: PrefixTuningConfig = finetune_config
         
-        # 如果未启用，直接返回模型
-        if not prefix_tuning_config.enable:
-            logger.info("Prefix Tuning 未启用，使用全量模型训练")
-            return model
-        
         logger.info("配置 Prefix Tuning...")
         
         # 如果使用量化，准备模型用于训练

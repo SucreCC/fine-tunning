@@ -10,8 +10,6 @@ from core.dto.config.finetune_config.interface.base_finetuning_config import Bas
 @dataclass
 class PTuningConfig(BaseFinetuningConfig):
     """P-Tuning 配置"""
-    # 是否启用 P-Tuning
-    enable: bool = True
     # 虚拟 token 数量
     num_virtual_tokens: int = 20
     # 编码器隐藏层维度
@@ -29,7 +27,6 @@ class PTuningConfig(BaseFinetuningConfig):
         return cls(
             type=config.get("type", "p_tuning"),  # 从 BaseFinetuneConfig 继承的字段
             stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
-            enable=config.get("enable", True),
             num_virtual_tokens=config.get("num_virtual_tokens", 20),
             encoder_hidden_size=config.get("encoder_hidden_size", None),
             encoder_num_layers=config.get("encoder_num_layers", 2),
@@ -40,7 +37,6 @@ class PTuningConfig(BaseFinetuningConfig):
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
-            "enable": self.enable,
             "num_virtual_tokens": self.num_virtual_tokens,
             "encoder_hidden_size": self.encoder_hidden_size,
             "encoder_num_layers": self.encoder_num_layers,

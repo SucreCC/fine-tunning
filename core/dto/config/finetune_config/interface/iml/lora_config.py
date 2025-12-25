@@ -11,8 +11,6 @@ from core.dto.config.finetune_config.interface.base_finetuning_config import Bas
 @dataclass
 class LoRAConfig(BaseFinetuningConfig):
     """AdaLoRA 配置"""
-    # 是否启用 AdaLoRA
-    enable: bool = True
     # 初始 rank
     r: int = 8
     # LoRA alpha
@@ -60,7 +58,6 @@ class LoRAConfig(BaseFinetuningConfig):
         return cls(
             type=config.get("type", "lora"),  # 从 BaseFinetuneConfig 继承的字段
             stage=config.get("stage", "sft"),  # 从 BaseFinetuneConfig 继承的字段
-            enable=config.get("enable", True),
             r=config.get("r", 8),
             lora_alpha=config.get("lora_alpha", 32),
             target_modules=target_modules if isinstance(target_modules, list) else list(target_modules),
@@ -76,7 +73,6 @@ class LoRAConfig(BaseFinetuningConfig):
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
-            "enable": self.enable,
             "r": self.r,
             "lora_alpha": self.lora_alpha,
             "target_modules": self.target_modules,

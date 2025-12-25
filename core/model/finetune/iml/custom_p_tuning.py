@@ -47,11 +47,6 @@ class CustomPTuning(BaseCustomFinetuning):
         
         p_tuning_config: PTuningConfig = finetune_config
         
-        # 如果未启用，直接返回模型
-        if not p_tuning_config.enable:
-            logger.info("P-Tuning 未启用，使用全量模型训练")
-            return model
-        
         logger.info("配置 P-Tuning...")
         
         # 如果使用量化，准备模型用于训练

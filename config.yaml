@@ -37,27 +37,25 @@ model:
 finetune:
   type: lora           # full | qlora | prefix_tuning | p_tuning | adalora | ia3
   stage: sft               # sft | dpo | rm（先预留）
-
-  # Prefix Tuning 配置（strategy=prefix_tuning 时生效）
+  enable: true
+  
+  # Prefix Tuning 配置（type=prefix_tuning 时生效）
   prefix_tuning:
-    enable: true
     num_virtual_tokens: 20
     encoder_hidden_size: null  # null 表示使用模型隐藏层维度
     prefix_projection: false
     task_type: "CAUSAL_LM"
   
-  # P-Tuning 配置（strategy=p_tuning / ptuning 时生效）
+  # P-Tuning 配置（type=p_tuning / ptuning 时生效）
   p_tuning:
-    enable: true
     num_virtual_tokens: 20
     encoder_hidden_size: null
     encoder_num_layers: 2
     encoder_reparameterization_type: "MLP"  # MLP | LSTM
     task_type: "CAUSAL_LM"
   
-  # AdaLoRA 配置（strategy=adalora 时生效）
+  # LoRA 配置（type=lora / qlora 时生效）
   lora:
-    enable: true
     r: 8
     lora_alpha: 32
     target_modules: ["q_proj", "v_proj"]
@@ -69,9 +67,8 @@ finetune:
     task_type: "CAUSAL_LM"
     bias: "none"
   
-  # IA3 配置（strategy=ia3 时生效）
+  # IA3 配置（type=ia3 时生效）
   ia3:
-    enable: true
     target_modules: ["k_proj", "v_proj", "out_proj"]
     feedforward_modules: []
     task_type: "CAUSAL_LM"
