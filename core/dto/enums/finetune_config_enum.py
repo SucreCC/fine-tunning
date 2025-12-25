@@ -1,9 +1,9 @@
 """
 微调策略枚举
-根据 strategy 名称获取对应的配置类
+根据 strategy 名称获取对应的配置类 & 配置文件名
 """
 from enum import Enum
-from typing import Type
+from typing import Type, Optional
 
 from core.dto.config.finetune_config.interface.base_finetune_config import BaseFinetuneConfig
 from core.dto.config.finetune_config.interface.iml.ia3_config import IA3Config
@@ -15,65 +15,50 @@ from core.dto.config.finetune_config.interface.iml.prefix_tuning_config import P
 class FinetuneStrategyEnum(Enum):
     """微调策略枚举"""
 
-    PREFIX_TUNING = ("prefix_tuning", PrefixTuningConfig)
-    P_TUNING = ("p_tuning", PTuningConfig)
-    PTUNING = ("ptuning", PTuningConfig)  # 别名
-    LORA = ("lora", LoRAConfig)
-    IA3 = ("ia3", IA3Config)
-    FULL = ("full", None)  # 全量微调暂时没有特殊配置
+    PREFIX_TUNING = ("prefix_tuning", PrefixTuningConfig, "ia3_config")
+    P_TUNING = ("p_tuning", PTuningConfig, "p_tuning.yaml")
+    PTUNING = ("ptuning", PTuningConfig, "p_tuning.yaml")   # 别名，共用配置文件
+    LORA = ("lora", LoRAConfig, "lora.yaml")
+    IA3 = ("ia3", IA3Config, "ia3.yaml")
+    FULL = ("full", None, None)  # 全量微调无独立配置文件
 
-    def __init__(self, strategy_name: str, config_class: Type[BaseFinetuneConfig] | None):
-        """
-        初始化枚举值
-        
-        Args:
-            strategy_name: 策略名称（如 "lora"）
-            config_class: 对应的配置类
-        """
+    def __init__(
+        self,
+        strategy_name: str,
+        config_class: Optional[Type[BaseFinetuneConfig]],
+        module_name: str,
+    ):
         self.strategy_name = strategy_name
         self.config_class = config_class
+        self.module_name = module_name
+
+    # ---------- 你原有的方法，保持不变 ----------
 
     @classmethod
-    def from_strategy_name(cls, strategy_name: str) -> "FinetuneStrategyEnum":
-        """
-        根据策略名称获取枚举值
-        
-        Args:
-            strategy_name: 策略名称（如 "lora"）
-            
-        Returns:
-            FinetuneStrategyEnum 枚举值
-            
-        Raises:
-            ValueError: 如果策略名称不存在
-        """
-        for strategy in cls:
-            if strategy.strategy_name == strategy_name:
-                return strategy
+    def get_config_class_by_type(
+        cls,
+        finetune_type: str,
+    ) -> Optional[Type[BaseFinetuneConfig]]:
+        finetune_type = finetune_type.lower()
+
+        for item in cls:
+            if item.strategy_name == finetune_type:
+                return item.config_class
+
         raise ValueError(
-            f"未知的微调策略: {strategy_name}。"
-            f"支持的策略: {[s.strategy_name for s in cls]}"
+            f"Unknown finetune strategy: {finetune_type}. "
+            f"Available strategies: {[i.strategy_name for i in cls]}"
         )
 
-    def get_config_class(self) -> Type[BaseFinetuneConfig] | None:
-        """
-        获取对应的配置类
-        
-        Returns:
-            配置类，如果该策略没有特殊配置则返回 None
-        """
-        return self.config_class
+    @classmethod
+    def from_type(cls, finetune_type: str) -> "FinetuneStrategyEnum":
+        finetune_type = finetune_type.lower()
 
-    def create_config(self, config_dict: dict) -> BaseFinetuneConfig | None:
-        """
-        根据配置字典创建配置对象
-        
-        Args:
-            config_dict: 配置字典
-            
-        Returns:
-            配置对象实例，如果该策略没有特殊配置则返回 None
-        """
-        if self.config_class is None:
-            return None
-        return self.config_class.from_dict(config_dict)
+        for item in cls:
+            if item.strategy_name == finetune_type:
+                return item
+
+        raise ValueError(
+            f"Unknown finetune strategy: {finetune_type}. "
+            f"Available strategies: {[i.strategy_name for i in cls]}"
+        )
