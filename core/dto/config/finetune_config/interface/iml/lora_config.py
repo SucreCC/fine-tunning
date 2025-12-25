@@ -9,7 +9,7 @@ from core.dto.config.finetune_config.interface.base_finetune_config import BaseF
 
 
 @dataclass
-class AdaLoRAConfig(BaseFinetuneConfig):
+class LoRAConfig(BaseFinetuneConfig):
     """AdaLoRA 配置"""
     # 是否启用 AdaLoRA
     enable: bool = True
@@ -45,7 +45,7 @@ class AdaLoRAConfig(BaseFinetuneConfig):
             ]
     
     @classmethod
-    def from_dict(cls, config: dict) -> "AdaLoRAConfig":
+    def from_dict(cls, config: dict) -> "LoRAConfig":
         """从字典创建配置对象"""
         target_modules = config.get(
             "target_modules",

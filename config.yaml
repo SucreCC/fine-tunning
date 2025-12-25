@@ -35,7 +35,7 @@ model:
 # 微调策略配置（核心）
 # ========================
 finetune:
-  strategy: lora           # full | lora | qlora | prefix_tuning | p_tuning | adalora | ia3
+  strategy: lora           # full | qlora | prefix_tuning | p_tuning | adalora | ia3
   stage: sft               # sft | dpo | rm（先预留）
 
   # Prefix Tuning 配置（strategy=prefix_tuning 时生效）
@@ -56,7 +56,7 @@ finetune:
     task_type: "CAUSAL_LM"
   
   # AdaLoRA 配置（strategy=adalora 时生效）
-  adalora:
+  lora:
     enable: true
     r: 8
     lora_alpha: 32
