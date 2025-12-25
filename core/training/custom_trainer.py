@@ -45,10 +45,17 @@ class CustomTrainer(Trainer):
             raise ValueError("必须提供 training_args 或 config")
         
         if training_args is None:
-            training_args = CustomTrainer._create_training_arguments(config)
+            training_args = CustomTrainer._create_training_arguments(config, model)
         
         # 数据整理器
         data_collator = get_data_collator(tokenizer)
+        
+        # 检查模型是否已经在多个设备上（通过 device_map="auto"）
+        self._model_on_multiple_devices = False
+        if hasattr(model, 'hf_device_map') and model.hf_device_map:
+            self._model_on_multiple_devices = True
+        elif hasattr(model, 'device_map') and model.device_map:
+            self._model_on_multiple_devices = True
         
         # 初始化父类
         super().__init__(
@@ -59,11 +66,36 @@ class CustomTrainer(Trainer):
             data_collator=data_collator,
         )
         
-        self.tokenizer = tokenizer
+        # 使用 processing_class 代替已弃用的 tokenizer
+        # 新版本的 transformers 推荐使用 processing_class
+        # 直接设置 processing_class，如果 Trainer 不支持会自动回退到 tokenizer
+        try:
+            self.processing_class = tokenizer
+        except AttributeError:
+            # 向后兼容：如果 processing_class 不存在，使用 tokenizer
+            self.tokenizer = tokenizer
+        
         self.config = config
     
+    def _setup_devices(self):
+        """
+        重写设备设置方法，如果模型已经在多个设备上，跳过设备移动以避免警告
+        """
+        if self._model_on_multiple_devices:
+            # 模型已经在多个设备上，不需要移动
+            # 直接使用模型的当前设备配置
+            import torch
+            if torch.cuda.is_available():
+                self.args._n_gpu = torch.cuda.device_count()
+            else:
+                self.args._n_gpu = 0
+            return
+        else:
+            # 正常设置设备
+            super()._setup_devices()
+    
     @staticmethod
-    def _create_training_arguments(config: ConfigManager) -> TrainingArguments:
+    def _create_training_arguments(config: ConfigManager, model=None) -> TrainingArguments:
         """
         从配置创建训练参数
         
@@ -90,38 +122,63 @@ class CustomTrainer(Trainer):
         use_eval = has_eval_dataset and training_config.eval_steps is not None and training_config.eval_steps > 0
         
         if use_eval:
-            evaluation_strategy = "steps"
+            eval_strategy = "steps"
             eval_steps = training_config.eval_steps
-            save_strategy = "steps"  # 必须与 evaluation_strategy 匹配
+            save_strategy = "steps"  # 必须与 eval_strategy 匹配
             load_best_model_at_end = True
         else:
-            evaluation_strategy = "no"
+            eval_strategy = "no"
             eval_steps = None
             save_strategy = "steps"  # 保存策略仍然使用 steps
             load_best_model_at_end = False
         
-        training_args = TrainingArguments(
-            output_dir=model_config.output_dir,
-            num_train_epochs=training_config.num_epochs,
-            per_device_train_batch_size=training_config.per_device_train_batch_size,
-            gradient_accumulation_steps=training_config.gradient_accumulation_steps,
-            learning_rate=training_config.learning_rate,
-            weight_decay=training_config.weight_decay,
-            lr_scheduler_type=training_config.lr_scheduler_type,
-            warmup_steps=training_config.warmup_steps,
-            save_steps=training_config.save_steps,
-            save_strategy=save_strategy,
-            evaluation_strategy=evaluation_strategy,
-            eval_steps=eval_steps,
-            logging_steps=training_config.logging_steps,
-            fp16=training_config.fp16,
-            bf16=training_config.bf16,
-            seed=training_config.seed,
-            max_grad_norm=training_config.max_grad_norm,
-            save_total_limit=training_config.save_total_limit,
-            load_best_model_at_end=load_best_model_at_end,
-            report_to=report_to,
-            run_name=run_name,
-        )
+        # 检查模型是否已经在多个设备上（通过 device_map="auto"）
+        # 如果是，设置 dataloader_pin_memory=False 以避免警告
+        model_on_multiple_devices = False
+        if model is not None:
+            # 检查模型是否有 hf_device_map 属性（表示使用了 device_map="auto"）
+            if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                model_on_multiple_devices = True
+            # 或者检查模型是否有 device_map 属性
+            elif hasattr(model, 'device_map') and model.device_map:
+                model_on_multiple_devices = True
+        
+        # 构建 TrainingArguments 参数字典
+        training_args_dict = {
+            "output_dir": model_config.output_dir,
+            "num_train_epochs": training_config.num_epochs,
+            "per_device_train_batch_size": training_config.per_device_train_batch_size,
+            "gradient_accumulation_steps": training_config.gradient_accumulation_steps,
+            "learning_rate": training_config.learning_rate,
+            "weight_decay": training_config.weight_decay,
+            "lr_scheduler_type": training_config.lr_scheduler_type,
+            "warmup_steps": training_config.warmup_steps,
+            "save_steps": training_config.save_steps,
+            "save_strategy": save_strategy,
+            "eval_steps": eval_steps,
+            "logging_steps": training_config.logging_steps,
+            "fp16": training_config.fp16,
+            "bf16": training_config.bf16,
+            "seed": training_config.seed,
+            "max_grad_norm": training_config.max_grad_norm,
+            "save_total_limit": training_config.save_total_limit,
+            "load_best_model_at_end": load_best_model_at_end,
+            "report_to": report_to,
+            "run_name": run_name,
+        }
+        
+        # 如果模型已经在多个设备上，设置 dataloader_pin_memory=False
+        # 这样可以避免 Trainer 尝试移动模型到单个设备
+        if model_on_multiple_devices:
+            training_args_dict["dataloader_pin_memory"] = False
+        
+        # 根据 transformers 版本使用正确的参数名
+        # 旧版本使用 eval_strategy，新版本使用 evaluation_strategy
+        try:
+            # 先尝试使用 eval_strategy（旧版本 transformers）
+            training_args = TrainingArguments(eval_strategy=eval_strategy, **training_args_dict)
+        except TypeError:
+            # 如果失败，尝试使用 evaluation_strategy（新版本 transformers）
+            training_args = TrainingArguments(evaluation_strategy=eval_strategy, **training_args_dict)
         
         return training_args
