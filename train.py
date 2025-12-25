@@ -12,6 +12,7 @@ from core.config.log_config import LogConfig
 from core.config.model_config import ModelConfig
 from core.data.custom_dataset import CustomDataset
 from core.data.interface.iml.default_processor import DefaultProcessor
+from core.data.interface.iml.qwen_processor import QwenProcessor
 from core.model import load_model_and_tokenizer, setup_lora
 from core.training import create_trainer
 from core.utils import logging
@@ -74,7 +75,7 @@ def init_data_set(config_manager: ConfigManager, tokenizer: PreTrainedTokenizer)
     """初始化数据集"""
 
     # 创建数据处理对象
-    processor = DefaultProcessor(system_template=config_manager.dataset_config.system_prompt)
+    processor = QwenProcessor(system_template=config_manager.dataset_config.system_prompt)
 
     # 初始化训练数据集
     train_dataset = CustomDataset(
