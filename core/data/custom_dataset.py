@@ -2,8 +2,14 @@
 数据集处理模块
 Dataset 和 DataCollator
 """
-import json
 import os
+
+# 设置 tokenizers 并行性环境变量，避免 fork 警告
+# 必须在导入 transformers 之前设置
+if "TOKENIZERS_PARALLELISM" not in os.environ:
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+import json
 import random
 from typing import List, Dict, Optional
 from torch.utils.data import Dataset

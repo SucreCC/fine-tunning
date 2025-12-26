@@ -51,7 +51,8 @@ class CustomTrainer(Trainer):
             raise ValueError("必须提供 training_args 或 config")
         
         if training_args is None:
-            training_args = CustomTrainer._create_training_arguments(config, model)
+            # 根据实际的 eval_dataset 创建训练参数
+            training_args = CustomTrainer._create_training_arguments(config, model, eval_dataset=eval_dataset)
         
         # 数据整理器
         data_collator = get_data_collator(tokenizer)
@@ -118,7 +119,7 @@ class CustomTrainer(Trainer):
             super()._setup_devices()
     
     @staticmethod
-    def _create_training_arguments(config: ConfigManager, model=None) -> TrainingArguments:
+    def _create_training_arguments(config: ConfigManager, model=None, eval_dataset=None) -> TrainingArguments:
         """
         从配置创建训练参数
         
@@ -140,8 +141,18 @@ class CustomTrainer(Trainer):
             run_name = wandb_config.wandb_run_name or wandb_config.wandb_project
         
         # 处理评估策略和保存策略
-        # 如果提供了 eval_steps，则使用 steps 策略；否则使用 no 策略
-        has_eval_dataset = config.dataset_config.val_path is not None and config.dataset_config.val_path.strip() != ""
+        # 检查是否有验证数据集（优先使用传入的 eval_dataset，否则检查配置）
+        has_eval_dataset = False
+        if eval_dataset is not None:
+            # 如果传入了 eval_dataset，检查是否为空
+            try:
+                has_eval_dataset = len(eval_dataset) > 0
+            except (TypeError, AttributeError):
+                has_eval_dataset = eval_dataset is not None
+        else:
+            # 如果没有传入，检查配置中的路径
+            has_eval_dataset = config.dataset_config.val_path is not None and config.dataset_config.val_path.strip() != ""
+        
         use_eval = has_eval_dataset and training_config.eval_steps is not None and training_config.eval_steps > 0
         
         if use_eval:

@@ -1,6 +1,12 @@
 """
 训练入口脚本
 """
+import os
+
+# 设置 tokenizers 并行性环境变量，避免 fork 警告
+# 必须在导入 transformers 之前设置
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 from transformers import PreTrainedTokenizer
 from core.data.custom_dataset import CustomDataset
 from core.data.interface.base_processor import BaseProcessor
@@ -86,11 +92,14 @@ def main():
     ).load()
 
     train_dataset, val_dataset = init_data_set(config_manager, tokenizer)
-
-
-
+    
+    # 检查数据集
+    if len(train_dataset) == 0:
+        logger.error("训练数据集为空！请检查数据集路径和 train_ratio 配置")
+        raise ValueError("训练数据集为空，无法开始训练")
 
     # 创建 Trainer（回调会自动添加）
+    logger.info("正在创建 Trainer...")
     trainer = CustomTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -98,7 +107,7 @@ def main():
         eval_dataset=val_dataset,
         config=config_manager
     )
-    logger.info("创建 Trainer 成功")
+    logger.info("✓ Trainer 创建成功")
     
     # 输出训练信息
     logger.info("=" * 60)
@@ -108,14 +117,33 @@ def main():
     logger.info(f"  训练轮数: {config_manager.training_config.num_epochs}")
     logger.info(f"  批次大小: {config_manager.training_config.per_device_train_batch_size}")
     logger.info(f"  梯度累积步数: {config_manager.training_config.gradient_accumulation_steps}")
+    effective_batch_size = config_manager.training_config.per_device_train_batch_size * config_manager.training_config.gradient_accumulation_steps
+    logger.info(f"  有效批次大小: {effective_batch_size}")
     logger.info(f"  学习率: {config_manager.training_config.learning_rate}")
     logger.info(f"  日志步数间隔: {config_manager.training_config.logging_steps}")
+    logger.info(f"  保存步数间隔: {config_manager.training_config.save_steps}")
+    
+    # 计算总步数
+    total_steps = (len(train_dataset) // effective_batch_size) * config_manager.training_config.num_epochs
+    logger.info(f"  预计总训练步数: {total_steps}")
     logger.info("=" * 60)
 
     # 开始训练
-    logger.info("开始训练...")
-    logger.info("训练进度条应该会显示在下方，如果看不到，请检查日志配置")
-    trainer.train()
+    logger.info("")
+    logger.info("🚀 开始训练...")
+    logger.info("=" * 60)
+    try:
+        trainer.train()
+        logger.info("=" * 60)
+        logger.info("✓ 训练完成！")
+    except KeyboardInterrupt:
+        logger.info("=" * 60)
+        logger.warning("训练被用户中断")
+        raise
+    except Exception as e:
+        logger.error("=" * 60)
+        logger.error(f"训练过程中发生错误: {e}", exc_info=True)
+        raise
 
     # 保存最终模型
     logger.info("保存模型...")

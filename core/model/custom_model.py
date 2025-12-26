@@ -2,6 +2,13 @@
 模型加载模块
 封装模型和分词器的加载逻辑
 """
+import os
+
+# 设置 tokenizers 并行性环境变量，避免 fork 警告
+# 必须在导入 transformers 之前设置
+if "TOKENIZERS_PARALLELISM" not in os.environ:
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import torch
 from typing import Tuple, Optional, Union
 from transformers import (
