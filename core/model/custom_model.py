@@ -88,6 +88,47 @@ class CustomModel:
         
         return quantization_config
     
+    def _sync_token_ids_to_model(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer):
+        """
+        同步 tokenizer 的 token IDs 到模型配置，避免警告
+        
+        Args:
+            model: 模型对象
+            tokenizer: 分词器对象
+        """
+        if not hasattr(model, 'config') or model.config is None:
+            return
+        
+        config = model.config
+        
+        # 同步 pad_token_id
+        if tokenizer.pad_token_id is not None:
+            config.pad_token_id = tokenizer.pad_token_id
+        elif hasattr(config, 'pad_token_id') and config.pad_token_id is not None:
+            # 如果 tokenizer 没有 pad_token_id，但模型配置有，保持模型配置
+            pass
+        
+        # 同步 bos_token_id（包括 None 的情况）
+        if hasattr(tokenizer, 'bos_token_id'):
+            config.bos_token_id = tokenizer.bos_token_id
+        
+        # 同步 eos_token_id
+        if tokenizer.eos_token_id is not None:
+            config.eos_token_id = tokenizer.eos_token_id
+        elif hasattr(config, 'eos_token_id') and config.eos_token_id is not None:
+            # 如果 tokenizer 没有 eos_token_id，但模型配置有，保持模型配置
+            pass
+        
+        # 同步 generation_config（如果存在）
+        if hasattr(model, 'generation_config') and model.generation_config is not None:
+            gen_config = model.generation_config
+            if tokenizer.pad_token_id is not None:
+                gen_config.pad_token_id = tokenizer.pad_token_id
+            if hasattr(tokenizer, 'bos_token_id'):
+                gen_config.bos_token_id = tokenizer.bos_token_id
+            if tokenizer.eos_token_id is not None:
+                gen_config.eos_token_id = tokenizer.eos_token_id
+    
     def _load_tokenizer(self) -> PreTrainedTokenizer:
         """
         加载分词器
@@ -110,9 +151,12 @@ class CustomModel:
         
         return tokenizer
     
-    def _load_model(self) -> PreTrainedModel:
+    def _load_model(self, tokenizer: Optional[PreTrainedTokenizer] = None) -> PreTrainedModel:
         """
         加载模型
+        
+        Args:
+            tokenizer: 分词器（可选），如果提供，会在加载模型时同步 token IDs
         
         Returns:
             模型对象
@@ -132,6 +176,10 @@ class CustomModel:
             device_map="auto",
             dtype=None if quantization_config else torch.float16,
         )
+        
+        # 如果提供了 tokenizer，立即同步 token IDs 以避免警告
+        if tokenizer is not None:
+            self._sync_token_ids_to_model(model, tokenizer)
         
         return model
     
@@ -183,17 +231,19 @@ class CustomModel:
         Returns:
             (model, tokenizer) 元组
         """
-        # 加载分词器
+        # 先加载分词器
         self.tokenizer = self._load_tokenizer()
         
-        # 加载模型
-        self.model = self._load_model()
+        # 加载模型时传入 tokenizer，立即同步 token IDs 以避免警告
+        self.model = self._load_model(tokenizer=self.tokenizer)
         
         logger.info(f"模型和分词器加载成功: {self.model_config.base_model_path}")
         
         # 如果提供了微调配置，应用微调策略
         if self.finetune_config is not None:
             self.model = self._setup_finetuning()
+            # 应用微调后再次同步（某些微调方法可能会修改模型配置）
+            self._sync_token_ids_to_model(self.model, self.tokenizer)
         
         return self.model, self.tokenizer
     

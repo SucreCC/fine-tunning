@@ -99,7 +99,7 @@ dataset:
   val_path: "./dataset/moemuu/raw/test.jsonl"
   max_length: 2048
   streaming: false
-  train_ratio: 1.0
+  train_ratio: 0.01
 
   # Processor（你设计得很好，保留）
   processor:
