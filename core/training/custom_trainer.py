@@ -232,6 +232,8 @@ class CustomTrainer(Trainer):
             "load_best_model_at_end": load_best_model_at_end,
             "report_to": report_to,
             "run_name": run_name,
+            # 确保显示训练进度条
+            "disable_tqdm": False,
         }
         
         # 添加设备相关配置

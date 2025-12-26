@@ -99,9 +99,22 @@ def main():
         config=config_manager
     )
     logger.info("创建 Trainer 成功")
+    
+    # 输出训练信息
+    logger.info("=" * 60)
+    logger.info("训练配置信息:")
+    logger.info(f"  训练数据集大小: {len(train_dataset)}")
+    logger.info(f"  验证数据集大小: {len(val_dataset) if val_dataset else 0}")
+    logger.info(f"  训练轮数: {config_manager.training_config.num_epochs}")
+    logger.info(f"  批次大小: {config_manager.training_config.per_device_train_batch_size}")
+    logger.info(f"  梯度累积步数: {config_manager.training_config.gradient_accumulation_steps}")
+    logger.info(f"  学习率: {config_manager.training_config.learning_rate}")
+    logger.info(f"  日志步数间隔: {config_manager.training_config.logging_steps}")
+    logger.info("=" * 60)
 
     # 开始训练
     logger.info("开始训练...")
+    logger.info("训练进度条应该会显示在下方，如果看不到，请检查日志配置")
     trainer.train()
 
     # 保存最终模型
