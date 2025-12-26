@@ -99,7 +99,7 @@ dataset:
   val_path: "./dataset/moemuu/raw/test.jsonl"
   max_length: 2048
   streaming: false
-  train_ratio: 0.01
+  train_ratio: 1.0
 
   # Processor（你设计得很好，保留）
   processor:
@@ -118,10 +118,10 @@ training:
   learning_rate: 2.0e-5
   weight_decay: 0.01
   lr_scheduler_type: cosine
-  warmup_steps: 100
-  save_steps: 500
-  eval_steps: 500
-  logging_steps: 50
+  warmup_steps: 50
+  save_steps: 50
+  eval_steps: 50
+  logging_steps: 5
   seed: 42
   max_grad_norm: 1.0
 
