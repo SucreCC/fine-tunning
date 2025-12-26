@@ -171,8 +171,19 @@ class CustomTrainer(Trainer):
         import os
         import torch
         
-        # 检查是否使用 CUDA
-        use_cuda = device_config.use_cuda if device_config.use_cuda is not None else torch.cuda.is_available()
+        # 根据 device_type 确定是否使用 CUDA
+        device_type = device_config.device_type
+        if device_type == "cpu":
+            use_cuda = False
+        elif device_type == "gpu":
+            use_cuda = True
+        elif device_type == "tpu":
+            # TPU 需要特殊处理，这里先设为 False，后续可以扩展
+            use_cuda = False
+            # TODO: 添加 TPU 支持
+        else:
+            # device_type 为 None，自动检测（优先使用 GPU）
+            use_cuda = torch.cuda.is_available()
         
         # 处理并行策略配置
         parallel_strategy = device_config.parallel_strategy

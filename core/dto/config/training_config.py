@@ -30,8 +30,12 @@ class PrecisionConfig:
 @dataclass
 class DeviceConfig:
     """设备配置"""
-    # 是否使用 CUDA（None 表示自动检测）
-    use_cuda: Optional[bool] = None
+    # 设备类型（"cpu" | "gpu" | "tpu" | None）
+    # - "cpu": 强制使用 CPU
+    # - "gpu": 强制使用 GPU（CUDA）
+    # - "tpu": 强制使用 TPU（需要额外配置）
+    # - None: 自动检测（优先使用 GPU，如果没有则使用 CPU）
+    device_type: Optional[str] = None
     # 并行策略（"ddp" | "deepspeed" | "fsdp" | null）
     # - "ddp": DistributedDataParallel，单机多卡或多机多卡
     # - "deepspeed": DeepSpeed ZeRO，需要 deepspeed 配置文件
@@ -55,8 +59,22 @@ class DeviceConfig:
     @classmethod
     def from_dict(cls, config: dict) -> "DeviceConfig":
         """从字典创建配置对象"""
+        # 向后兼容：如果存在 use_cuda 或 use_cpu，转换为 device_type
+        device_type = config.get("device_type", None)
+        if device_type is None:
+            # 兼容旧配置
+            use_cuda = config.get("use_cuda", None)
+            use_cpu = config.get("use_cpu", None)
+            if use_cpu is True:
+                device_type = "cpu"
+            elif use_cuda is False:
+                device_type = "cpu"
+            elif use_cuda is True:
+                device_type = "gpu"
+            # 如果都是 None，则 device_type 保持为 None（自动检测）
+        
         return cls(
-            use_cuda=config.get("use_cuda", None),
+            device_type=device_type,
             parallel_strategy=config.get("parallel_strategy", None),
             ddp_backend=config.get("ddp_backend", None),
             ddp_find_unused_parameters=config.get("ddp_find_unused_parameters", False),
@@ -69,8 +87,8 @@ class DeviceConfig:
     def to_dict(self) -> dict:
         """转换为字典"""
         result = {}
-        if self.use_cuda is not None:
-            result["use_cuda"] = self.use_cuda
+        if self.device_type is not None:
+            result["device_type"] = self.device_type
         if self.parallel_strategy is not None:
             result["parallel_strategy"] = self.parallel_strategy
         if self.ddp_backend is not None:
